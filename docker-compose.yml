@@ -1,0 +1,10 @@
+services:
+    postgres:
+        image: postgres:latest
+        container_name: postgres
+        environment:
+            - POSTGRES_USER=root
+            - POSTGRES_PASSWORD=root
+            - POSTGRES_DB=sentinel_guard
+        ports:
+            - "5432:5432"
