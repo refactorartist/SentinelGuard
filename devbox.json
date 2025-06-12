@@ -20,9 +20,11 @@
           "devbox run shutdown"
         ],
         "start": [
-          "docker compose up -d"
+          "docker compose up -d",
+          "cargo sqlx migrate run"          
         ],
         "shutdown": [
+          "cargo sqlx migrate revert",
           "docker compose down"
         ]
       }

@@ -9,5 +9,5 @@ CREATE TABLE IF NOT EXISTS projects (
 );
 
 -- Optional: Indexes for fast lookup
-CREATE INDEX IF NOT EXISTS idx_project_name ON projects(name);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_project_name ON projects(name);
 CREATE INDEX IF NOT EXISTS idx_project_enabled ON projects(enabled);

@@ -27,7 +27,6 @@ impl ProjectRepository {
 }
 
 
-
 #[async_trait]
 impl Repository<Project> for ProjectRepository {
     type CreatePayload = ProjectCreatePayload;
@@ -54,9 +53,13 @@ impl Repository<Project> for ProjectRepository {
         )
         .fetch_one(&*self.pool)
         .await
-        .map_err(|e|  <sqlx::Error as Into<Error>>::into(e))?;
+        .map_err(|e|  <sqlx::Error as Into<Error>>::into(e));
 
-        Ok(created_project)
+        if created_project.is_err() {
+            return Err(Error::msg("Failed to create project: ".to_owned() + &created_project.unwrap_err().to_string()));
+        }
+
+        Ok(created_project.unwrap())
     }
 
     async fn read(&self, id: Uuid) -> Result<Option<Project>, Error> {
@@ -110,11 +113,11 @@ impl Repository<Project> for ProjectRepository {
             }
         }
 
+        query.push(", updated_at = ").push_bind(Utc::now());
+
         query.push(" WHERE id = ").push_bind(id);
 
         query.push(" RETURNING id, name, description, enabled, created_at, updated_at");
-
-        dbg!(query.sql());
 
         let updated_project = query.build()
             .fetch_one(&*self.pool)
@@ -127,18 +130,26 @@ impl Repository<Project> for ProjectRepository {
                 created_at: row.get("created_at"),
                 updated_at: row.get("updated_at"),
             })
-            .map_err(|e| <sqlx::Error as Into<Error>>::into(e))?;
+            .map_err(|_| Error::msg("No changes were made"));
 
-        Ok(updated_project)
+        if updated_project.is_err() {
+            return Err(updated_project.unwrap_err());
+        }
+
+        Ok(updated_project.unwrap())
     }
 
     async fn delete(&self, id: Uuid) -> Result<bool, Error> {
         let deleted_project = sqlx::query!("DELETE FROM projects WHERE id = $1", id,)
             .execute(&*self.pool)
             .await
-            .map_err(|e| <sqlx::Error as Into<Error>>::into(e))?;
+            .map_err(|_| Error::msg("No changes were made"));
 
-        Ok(deleted_project.rows_affected() > 0)
+        if deleted_project.is_err() {
+            return Err(deleted_project.unwrap_err());
+        }
+
+        Ok(deleted_project.unwrap().rows_affected() > 0)
     }
 
     async fn find(
@@ -199,6 +210,7 @@ impl Repository<Project> for ProjectRepository {
                 .push_bind(pagination.offset.unwrap_or(0));
         }
 
+
         let projects: Vec<Project> = query
             .build()
             .fetch_all(&*self.pool)
@@ -214,8 +226,8 @@ impl Repository<Project> for ProjectRepository {
                 updated_at: row.get("updated_at"),
             })
             .collect();
+
         Ok(projects)
     }
 }
-
 
