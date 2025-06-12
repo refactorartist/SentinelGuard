@@ -33,3 +33,27 @@ impl std::fmt::Display for SortOrder {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_sort_new() {
+        let sort = Sort::new("name".to_string(), SortOrder::Asc);
+        assert_eq!(sort.field, "name");
+        assert!(matches!(sort.order, SortOrder::Asc));
+    }
+
+    #[test]
+    fn test_sort_order() {
+        let sort = Sort::new("id".to_string(), SortOrder::Desc);
+        assert!(matches!(*sort.order(), SortOrder::Desc));
+    }
+
+    #[test]
+    fn test_sort_order_display() {
+        assert_eq!(SortOrder::Asc.to_string(), "ASC");
+        assert_eq!(SortOrder::Desc.to_string(), "DESC");
+    }
+}
