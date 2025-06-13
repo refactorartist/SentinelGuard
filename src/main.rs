@@ -24,7 +24,7 @@ async fn main() -> Result<(), anyhow::Error> {
             .configure(project_route::configure_routes)
             
     })
-    .bind((host.clone(), port.clone()))?
+    .bind((host.clone(), port))?
     .shutdown_timeout(30) // 30 seconds graceful shutdown timeout
     .workers(4) // Set number of workers
     .keep_alive(Duration::from_secs(75)) // Keep-alive timeout

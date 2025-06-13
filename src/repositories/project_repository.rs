@@ -53,7 +53,7 @@ impl Repository<Project> for ProjectRepository {
         )
         .fetch_one(&*self.pool)
         .await
-        .map_err(|e|  <sqlx::Error as Into<Error>>::into(e));
+        .map_err(<sqlx::Error as Into<Error>>::into);
 
         if created_project.is_err() {
             return Err(Error::msg("Failed to create project: ".to_owned() + &created_project.unwrap_err().to_string()));
@@ -70,7 +70,7 @@ impl Repository<Project> for ProjectRepository {
         )
         .fetch_optional(&*self.pool)
         .await
-        .map_err(|e| <sqlx::Error as Into<Error>>::into(e))?;
+        .map_err(<sqlx::Error as Into<Error>>::into)?;
 
         if project.is_none() {
             return Err(Error::msg("Project not found"));
@@ -215,7 +215,7 @@ impl Repository<Project> for ProjectRepository {
             .build()
             .fetch_all(&*self.pool)
             .await
-            .map_err(|e| <sqlx::Error as Into<Error>>::into(e))?
+            .map_err(<sqlx::Error as Into<Error>>::into)?
             .into_iter()
             .map(|row| Project {
                 id: row.get("id"),

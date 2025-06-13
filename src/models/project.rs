@@ -82,7 +82,7 @@ mod tests {
         assert!(project.id.is_none());
         assert_eq!(project.name, "");
         assert_eq!(project.description, "");
-        assert_eq!(project.enabled, false);
+        assert!(!project.enabled);
     }
 
     #[test]

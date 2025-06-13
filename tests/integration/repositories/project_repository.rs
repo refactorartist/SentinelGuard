@@ -18,7 +18,7 @@ async fn test_project_repository_create_project_succeeds(pool: PgPool) {
 
     assert_eq!(project.name, "test");
     assert_eq!(project.description, "test");
-    assert_eq!(project.enabled, true);
+    assert!(project.enabled);
 }
 
 #[sqlx::test]
@@ -44,51 +44,19 @@ async fn test_project_repository_create_duplicate_error(pool: PgPool) {
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 #[sqlx::test(fixtures("projects"))]
 async fn test_project_repository_read_success(pool: PgPool) {
     let project_repository = ProjectRepository::new(Arc::new(pool));
 
     let project = project_repository.read(Uuid::parse_str("123e4567-e89b-12d3-a456-426614174000").unwrap()).await.unwrap();
 
-    assert_eq!(project.is_some(), true);
+    assert!(project.is_some());
 
     let project = project.unwrap();
 
     assert_eq!(project.name, "testa");
     assert_eq!(project.description, "test");
-    assert_eq!(project.enabled, true);
+    assert!(project.enabled);
 }
 
 #[sqlx::test]
@@ -97,7 +65,7 @@ async fn test_project_repository_read_not_found(pool: PgPool) {
 
     let project = project_repository.read(Uuid::parse_str("123e4567-e89b-12d3-a456-426614174002").unwrap()).await;
 
-    assert_eq!(project.is_err(), true);
+    assert!(project.is_err());
 
     assert_eq!(project.unwrap_err().to_string(), "Project not found");
 }
@@ -138,7 +106,7 @@ async fn test_project_repository_update_enabled_false_success(pool: PgPool) {
             description: None,
             enabled: Some(false),
         },
-        |project| assert_eq!(project.enabled, false),
+        |project| assert!(!project.enabled),
     ).await;
 }
 
@@ -151,7 +119,7 @@ async fn test_project_repository_update_enabled_true_success(pool: PgPool) {
             description: None,
             enabled: Some(true),
         },
-        |project| assert_eq!(project.enabled, true),
+        |project| assert!(project.enabled),
     ).await;
 }
 
@@ -187,7 +155,7 @@ async fn test_project_repository_update_no_changes_were_made_error(pool: PgPool)
         enabled: None,
     }).await;
 
-    assert_eq!(project.is_err(), true);
+    assert!(project.is_err());
     assert_eq!(project.unwrap_err().to_string(), "No changes were made");
 }
 
@@ -198,7 +166,7 @@ async fn test_project_repository_delete_success(pool: PgPool) {
 
     let is_deleted = project_repository.delete(Uuid::parse_str("123e4567-e89b-12d3-a456-426614174000").unwrap()).await.unwrap();
 
-    assert_eq!(is_deleted, true);
+    assert!(is_deleted);
 }
 
 #[sqlx::test]
@@ -207,7 +175,7 @@ async fn test_project_repository_delete_nothing_to_delete(pool: PgPool) {
 
     let is_deleted = project_repository.delete(Uuid::parse_str("123e4567-e89b-12d3-a456-426614174002").unwrap()).await.unwrap();
 
-    assert_eq!(is_deleted, false);
+    assert!(!is_deleted);
 }
 
 
