@@ -1,11 +1,13 @@
-use crate::repositories::project_repository::ProjectRepository;
-use crate::models::project::{Project, ProjectCreatePayload, ProjectFilter, ProjectSortOrder, ProjectUpdatePayload};
+use crate::models::pagination::Pagination;
+use crate::models::project::{
+    Project, ProjectCreatePayload, ProjectFilter, ProjectSortOrder, ProjectUpdatePayload,
+};
 use crate::repositories::base::Repository;
+use crate::repositories::project_repository::ProjectRepository;
 use crate::services::base::Service;
 use anyhow::Error;
-use uuid::Uuid;
-use crate::models::pagination::Pagination;
 use async_trait::async_trait;
+use uuid::Uuid;
 
 #[derive(Clone)]
 pub struct ProjectService {
@@ -16,8 +18,7 @@ impl ProjectService {
     pub fn new(repo: ProjectRepository) -> Self {
         Self { repository: repo }
     }
-}   
-
+}
 
 #[async_trait]
 impl Service<Project> for ProjectService {

@@ -1,8 +1,8 @@
+use crate::models::pagination::Pagination;
 use anyhow::Error;
 use async_trait::async_trait;
 use serde::{Serialize, de::DeserializeOwned};
 use uuid::Uuid;
-use crate::models::pagination::Pagination;
 
 #[async_trait]
 pub trait Repository<T: Send + Sync + Serialize + DeserializeOwned + 'static> {
@@ -24,5 +24,5 @@ pub trait Repository<T: Send + Sync + Serialize + DeserializeOwned + 'static> {
         filter: Self::Filter,
         sort: Option<Vec<Self::Sort>>,
         pagination: Option<Pagination>,
-    ) -> Result<Vec<T>, Error>;    
+    ) -> Result<Vec<T>, Error>;
 }

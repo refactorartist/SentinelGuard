@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::models::project::{ProjectCreatePayload};
+use crate::models::project::ProjectCreatePayload;
 use crate::models::{
     pagination::Pagination,
     project::{Project, ProjectFilter, ProjectSortOrder, ProjectUpdatePayload},
@@ -25,7 +25,6 @@ impl ProjectRepository {
         Self { pool }
     }
 }
-
 
 #[async_trait]
 impl Repository<Project> for ProjectRepository {
@@ -56,7 +55,9 @@ impl Repository<Project> for ProjectRepository {
         .map_err(<sqlx::Error as Into<Error>>::into);
 
         if created_project.is_err() {
-            return Err(Error::msg("Failed to create project: ".to_owned() + &created_project.unwrap_err().to_string()));
+            return Err(Error::msg(
+                "Failed to create project: ".to_owned() + &created_project.unwrap_err().to_string(),
+            ));
         }
 
         Ok(created_project.unwrap())
@@ -80,14 +81,13 @@ impl Repository<Project> for ProjectRepository {
     }
 
     async fn update(&self, id: Uuid, update: Self::UpdatePayload) -> Result<Project, Error> {
-
         let mut changes = Vec::new();
 
         if let Some(name) = update.name {
             changes.push(("name", name));
         }
 
-        if let  Some(description) = update.description {
+        if let Some(description) = update.description {
             changes.push(("description", description));
         }
 
@@ -109,7 +109,9 @@ impl Repository<Project> for ProjectRepository {
             if value.is_empty() {
                 separated.push(field);
             } else {
-                separated.push(format!("{} = ", field)).push_bind_unseparated(value);
+                separated
+                    .push(format!("{} = ", field))
+                    .push_bind_unseparated(value);
             }
         }
 
@@ -119,7 +121,8 @@ impl Repository<Project> for ProjectRepository {
 
         query.push(" RETURNING id, name, description, enabled, created_at, updated_at");
 
-        let updated_project = query.build()
+        let updated_project = query
+            .build()
             .fetch_one(&*self.pool)
             .await
             .map(|row| Project {
@@ -191,7 +194,6 @@ impl Repository<Project> for ProjectRepository {
             }
         }
 
-
         if let Some(sort) = sort {
             query.push(" ORDER BY ");
             let mut order_by = query.separated(", ");
@@ -209,7 +211,6 @@ impl Repository<Project> for ProjectRepository {
                 .push(" OFFSET ")
                 .push_bind(pagination.offset.unwrap_or(0));
         }
-
 
         let projects: Vec<Project> = query
             .build()
@@ -230,4 +231,3 @@ impl Repository<Project> for ProjectRepository {
         Ok(projects)
     }
 }
-

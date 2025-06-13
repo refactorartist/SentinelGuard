@@ -1,9 +1,8 @@
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-use chrono::{DateTime, Utc};
 
 use crate::models::sort::SortOrder;
-
 
 #[derive(Debug, Serialize, Deserialize, Default)]
 pub struct Project {
@@ -23,14 +22,12 @@ pub struct ProjectFilter {
     pub enabled: Option<bool>,
 }
 
-
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ProjectCreatePayload {
     pub name: String,
     pub description: String,
     pub enabled: bool,
 }
-    
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ProjectUpdatePayload {
@@ -38,7 +35,6 @@ pub struct ProjectUpdatePayload {
     pub description: Option<String>,
     pub enabled: Option<bool>,
 }
-
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum ProjectSortableFields {
@@ -58,7 +54,6 @@ impl From<ProjectSortableFields> for String {
         }
     }
 }
-
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ProjectSortOrder {

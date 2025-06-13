@@ -1,9 +1,9 @@
-use uuid::Uuid;
-use serde::Serialize;
-use anyhow::Error;
-use serde::de::DeserializeOwned;
 use crate::models::pagination::Pagination;
+use anyhow::Error;
 use async_trait::async_trait;
+use serde::Serialize;
+use serde::de::DeserializeOwned;
+use uuid::Uuid;
 
 #[async_trait]
 pub trait Service<T: Send + Sync + Serialize + DeserializeOwned + 'static> {
