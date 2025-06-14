@@ -19,7 +19,7 @@ pub async fn post(
     let project = service
         .create(payload.into_inner())
         .await
-        .map_err(actix_web::error::ErrorInternalServerError)?;
+        .map_err(actix_web::error::ErrorBadRequest)?;
     Ok(HttpResponse::Created().json(project))
 }
 
