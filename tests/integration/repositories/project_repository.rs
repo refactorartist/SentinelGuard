@@ -52,7 +52,7 @@ async fn test_project_repository_create_project_with_duplicate_name_fails(pool: 
     assert!(project.is_err());
 }
 
-#[sqlx::test(fixtures("projects"))]
+#[sqlx::test(fixtures("../fixtures/projects.sql"))]
 async fn test_project_repository_read_existing_project_by_id_succeeds(pool: PgPool) {
     let project_repository = ProjectRepository::new(Arc::new(pool));
 
@@ -83,7 +83,7 @@ async fn test_project_repository_read_nonexistent_project_returns_error(pool: Pg
     assert_eq!(project.unwrap_err().to_string(), "Project not found");
 }
 
-#[sqlx::test(fixtures("projects"))]
+#[sqlx::test(fixtures("../fixtures/projects.sql"))]
 async fn test_project_repository_update_project_name_field_succeeds(pool: PgPool) {
     test_project_repository_update_helper(
         pool,
@@ -97,7 +97,7 @@ async fn test_project_repository_update_project_name_field_succeeds(pool: PgPool
     .await;
 }
 
-#[sqlx::test(fixtures("projects"))]
+#[sqlx::test(fixtures("../fixtures/projects.sql"))]
 async fn test_project_repository_update_project_description_field_succeeds(pool: PgPool) {
     test_project_repository_update_helper(
         pool,
@@ -111,7 +111,7 @@ async fn test_project_repository_update_project_description_field_succeeds(pool:
     .await;
 }
 
-#[sqlx::test(fixtures("projects"))]
+#[sqlx::test(fixtures("../fixtures/projects.sql"))]
 async fn test_project_repository_update_project_enabled_to_false_succeeds(pool: PgPool) {
     test_project_repository_update_helper(
         pool,
@@ -125,7 +125,7 @@ async fn test_project_repository_update_project_enabled_to_false_succeeds(pool: 
     .await;
 }
 
-#[sqlx::test(fixtures("projects"))]
+#[sqlx::test(fixtures("../fixtures/projects.sql"))]
 async fn test_project_repository_update_project_enabled_to_true_succeeds(pool: PgPool) {
     test_project_repository_update_helper(
         pool,
@@ -183,7 +183,7 @@ async fn test_project_repository_update_nonexistent_project_returns_error(pool: 
     assert_eq!(project.unwrap_err().to_string(), "No changes were made");
 }
 
-#[sqlx::test(fixtures("projects"))]
+#[sqlx::test(fixtures("../fixtures/projects.sql"))]
 async fn test_project_repository_delete_existing_project_succeeds(pool: PgPool) {
     let project_repository = ProjectRepository::new(Arc::new(pool));
 
@@ -207,7 +207,7 @@ async fn test_project_repository_delete_nonexistent_project_returns_false(pool: 
     assert!(!is_deleted);
 }
 
-#[sqlx::test(fixtures("projects"))]
+#[sqlx::test(fixtures("../fixtures/projects.sql"))]
 async fn test_project_repository_find_with_no_filters_returns_all_projects(pool: PgPool) {
     let project_repository = ProjectRepository::new(Arc::new(pool));
 
@@ -224,7 +224,7 @@ async fn test_project_repository_find_with_no_filters_returns_all_projects(pool:
     assert_eq!(projects.len(), 4);
 }
 
-#[sqlx::test(fixtures("projects"))]
+#[sqlx::test(fixtures("../fixtures/projects.sql"))]
 async fn test_project_repository_find_with_name_filter_returns_matching_projects(pool: PgPool) {
     let project_repository = ProjectRepository::new(Arc::new(pool));
 
@@ -243,8 +243,10 @@ async fn test_project_repository_find_with_name_filter_returns_matching_projects
     assert_eq!(projects.len(), 2);
 }
 
-#[sqlx::test(fixtures("projects"))]
-async fn test_project_repository_find_with_description_filter_returns_matching_projects(pool: PgPool) {
+#[sqlx::test(fixtures("../fixtures/projects.sql"))]
+async fn test_project_repository_find_with_description_filter_returns_matching_projects(
+    pool: PgPool,
+) {
     let project_repository = ProjectRepository::new(Arc::new(pool));
 
     let filter = ProjectFilter {
@@ -262,8 +264,10 @@ async fn test_project_repository_find_with_description_filter_returns_matching_p
     assert_eq!(projects.len(), 2);
 }
 
-#[sqlx::test(fixtures("projects"))]
-async fn test_project_repository_find_with_enabled_true_filter_returns_matching_projects(pool: PgPool) {
+#[sqlx::test(fixtures("../fixtures/projects.sql"))]
+async fn test_project_repository_find_with_enabled_true_filter_returns_matching_projects(
+    pool: PgPool,
+) {
     let project_repository = ProjectRepository::new(Arc::new(pool));
 
     let filter = ProjectFilter {
@@ -281,8 +285,10 @@ async fn test_project_repository_find_with_enabled_true_filter_returns_matching_
     assert_eq!(projects.len(), 3);
 }
 
-#[sqlx::test(fixtures("projects"))]
-async fn test_project_repository_find_with_enabled_false_filter_returns_matching_projects(pool: PgPool) {
+#[sqlx::test(fixtures("../fixtures/projects.sql"))]
+async fn test_project_repository_find_with_enabled_false_filter_returns_matching_projects(
+    pool: PgPool,
+) {
     let project_repository = ProjectRepository::new(Arc::new(pool));
 
     let filter = ProjectFilter {
@@ -301,7 +307,9 @@ async fn test_project_repository_find_with_enabled_false_filter_returns_matching
 }
 
 #[sqlx::test]
-async fn test_project_repository_find_with_no_filters_returns_empty_when_no_records_exist(pool: PgPool) {
+async fn test_project_repository_find_with_no_filters_returns_empty_when_no_records_exist(
+    pool: PgPool,
+) {
     let project_repository = ProjectRepository::new(Arc::new(pool));
 
     let filter = ProjectFilter::default();
@@ -316,7 +324,7 @@ async fn test_project_repository_find_with_no_filters_returns_empty_when_no_reco
     assert_eq!(projects.len(), 0);
 }
 
-#[sqlx::test(fixtures("projects"))]
+#[sqlx::test(fixtures("../fixtures/projects.sql"))]
 async fn test_project_repository_find_with_offset_pagination_returns_correct_subset(pool: PgPool) {
     let pagination = Pagination {
         limit: None,
@@ -329,7 +337,7 @@ async fn test_project_repository_find_with_offset_pagination_returns_correct_sub
     .await;
 }
 
-#[sqlx::test(fixtures("projects"))]
+#[sqlx::test(fixtures("../fixtures/projects.sql"))]
 async fn test_project_repository_find_with_limit_pagination_returns_correct_subset(pool: PgPool) {
     let pagination = Pagination {
         limit: Some(2),
@@ -370,8 +378,10 @@ async fn test_project_repository_find_with_pagination_helper<F>(
     assertion(&projects);
 }
 
-#[sqlx::test(fixtures("sort_projects"))]
-async fn test_project_repository_find_with_name_ascending_sort_returns_ordered_projects(pool: PgPool) {
+#[sqlx::test(fixtures("../fixtures/sort_projects.sql"))]
+async fn test_project_repository_find_with_name_ascending_sort_returns_ordered_projects(
+    pool: PgPool,
+) {
     let project_repository = ProjectRepository::new(Arc::new(pool));
 
     let filter = ProjectFilter::default();
@@ -395,8 +405,10 @@ async fn test_project_repository_find_with_name_ascending_sort_returns_ordered_p
     assert_eq!(projects[5].name, "testf");
 }
 
-#[sqlx::test(fixtures("sort_projects"))]
-async fn test_project_repository_find_with_name_descending_sort_returns_ordered_projects(pool: PgPool) {
+#[sqlx::test(fixtures("../fixtures/sort_projects.sql"))]
+async fn test_project_repository_find_with_name_descending_sort_returns_ordered_projects(
+    pool: PgPool,
+) {
     let project_repository = ProjectRepository::new(Arc::new(pool));
 
     let filter = ProjectFilter::default();
@@ -420,8 +432,10 @@ async fn test_project_repository_find_with_name_descending_sort_returns_ordered_
     assert_eq!(projects[5].name, "testa");
 }
 
-#[sqlx::test(fixtures("sort_projects"))]
-async fn test_project_repository_find_with_id_ascending_sort_returns_ordered_projects(pool: PgPool) {
+#[sqlx::test(fixtures("../fixtures/sort_projects.sql"))]
+async fn test_project_repository_find_with_id_ascending_sort_returns_ordered_projects(
+    pool: PgPool,
+) {
     let project_repository = ProjectRepository::new(Arc::new(pool));
 
     let filter = ProjectFilter::default();
@@ -445,8 +459,10 @@ async fn test_project_repository_find_with_id_ascending_sort_returns_ordered_pro
     assert_eq!(projects[5].name, "testf");
 }
 
-#[sqlx::test(fixtures("sort_projects"))]
-async fn test_project_repository_find_with_id_descending_sort_returns_ordered_projects(pool: PgPool) {
+#[sqlx::test(fixtures("../fixtures/sort_projects.sql"))]
+async fn test_project_repository_find_with_id_descending_sort_returns_ordered_projects(
+    pool: PgPool,
+) {
     let project_repository = ProjectRepository::new(Arc::new(pool));
 
     let filter = ProjectFilter::default();
