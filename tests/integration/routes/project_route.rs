@@ -73,3 +73,23 @@ async fn test_project_route_create_project_with_duplicate_name_fails(pool: PgPoo
 }
 
 
+#[sqlx::test(fixtures("../fixtures/projects.sql"))]
+async fn test_project_route_get_project_by_id(pool: PgPool) {
+    let app = create_test_app!(
+        services(pool),
+        routes()
+    );
+
+    let response = actix_web::test::TestRequest::get()
+        .uri("/projects/123e4567-e89b-12d3-a456-426614174000")
+        .send_request(&app)
+        .await;
+
+    assert!(response.status().is_success());
+
+    let project: Project = actix_web::test::read_body_json(response).await;
+
+    assert_eq!(project.name, "testa");
+    assert_eq!(project.description, "test");
+    assert!(project.enabled);
+}
