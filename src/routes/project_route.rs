@@ -41,9 +41,18 @@ pub async fn patch(
 ) -> Result<HttpResponse, Error> {
     let project = service
         .update(id.into_inner(), payload.into_inner())
-        .await
-        .map_err(actix_web::error::ErrorBadRequest)?;
-    Ok(HttpResponse::Ok().json(project))
+        .await;
+
+    if project.is_err() {
+        let error_message = project.unwrap_err().to_string();
+        match error_message.as_str() {
+            "No changes to update" => return Err(actix_web::error::ErrorBadRequest(error_message)),
+            "Project not found" => return Err(actix_web::error::ErrorNotFound(error_message)),
+            _ => return Err(actix_web::error::ErrorInternalServerError(error_message)),
+        }
+    }
+
+    Ok(HttpResponse::Ok().json(project.unwrap()))
 }
 
 pub async fn delete(

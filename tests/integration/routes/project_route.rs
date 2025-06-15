@@ -180,3 +180,24 @@ async fn test_project_route_patch_project_empty_payload(pool: PgPool) {
     assert!(response.status().is_client_error());
     assert_eq!(response.status(), actix_web::http::StatusCode::BAD_REQUEST);
 }
+
+
+#[sqlx::test]
+async fn test_project_route_patch_project_not_found(pool: PgPool) {
+    let app = create_test_app!(services(pool), routes());
+
+    let payload = ProjectUpdatePayload {
+        name: Some("test".to_string()),
+        description: None,
+        enabled: None,
+    };
+
+    let response = actix_web::test::TestRequest::patch()
+        .uri("/projects/123e4567-e89b-12d3-a456-426614178000")
+        .set_json(&payload)
+        .send_request(&app)
+        .await;
+
+    assert!(response.status().is_client_error());
+    assert_eq!(response.status(), actix_web::http::StatusCode::NOT_FOUND);
+}
