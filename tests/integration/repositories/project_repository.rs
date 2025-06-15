@@ -180,7 +180,8 @@ async fn test_project_repository_update_nonexistent_project_returns_error(pool: 
         .await;
 
     assert!(project.is_err());
-    assert_eq!(project.unwrap_err().to_string(), "No changes were made");
+    let error_message = project.unwrap_err().to_string();
+    assert_eq!(error_message, "Project not found");
 }
 
 #[sqlx::test(fixtures("../fixtures/projects.sql"))]

@@ -121,6 +121,7 @@ impl Repository<Project> for ProjectRepository {
 
         query.push(" RETURNING id, name, description, enabled, created_at, updated_at");
 
+
         let updated_project = query
             .build()
             .fetch_one(&*self.pool)
@@ -132,11 +133,14 @@ impl Repository<Project> for ProjectRepository {
                 enabled: row.get("enabled"),
                 created_at: row.get("created_at"),
                 updated_at: row.get("updated_at"),
-            })
-            .map_err(|_| Error::msg("No changes were made"));
+            });
 
         if updated_project.is_err() {
-            return Err(updated_project.unwrap_err());
+            let error = updated_project.unwrap_err();
+            match error {
+                sqlx::Error::RowNotFound => return Err(Error::msg("Project not found")),
+                _ => return Err(Error::msg("No changes were made")),
+            }
         }
 
         Ok(updated_project.unwrap())
