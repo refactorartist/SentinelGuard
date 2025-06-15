@@ -21,10 +21,7 @@ fn routes() -> Vec<fn(&mut actix_web::web::ServiceConfig)> {
 
 #[sqlx::test]
 async fn test_project_route_create_project_with_valid_data_succeeds(pool: PgPool) {
-    let app = create_test_app!(
-        services(pool),
-        routes()
-    );
+    let app = create_test_app!(services(pool), routes());
 
     let project = ProjectCreatePayload {
         name: "test".to_string(),
@@ -49,10 +46,7 @@ async fn test_project_route_create_project_with_valid_data_succeeds(pool: PgPool
 
 #[sqlx::test(fixtures("../fixtures/projects.sql"))]
 async fn test_project_route_create_project_with_duplicate_name_fails(pool: PgPool) {
-    let app = create_test_app!(
-        services(pool),
-        routes()
-    );
+    let app = create_test_app!(services(pool), routes());
 
     let project = ProjectCreatePayload {
         name: "testa".to_string(),
@@ -69,16 +63,11 @@ async fn test_project_route_create_project_with_duplicate_name_fails(pool: PgPoo
     assert!(response.status().is_client_error());
 
     assert_eq!(response.status(), actix_web::http::StatusCode::BAD_REQUEST);
-
 }
-
 
 #[sqlx::test(fixtures("../fixtures/projects.sql"))]
 async fn test_project_route_get_project_by_id_succeeds(pool: PgPool) {
-    let app = create_test_app!(
-        services(pool),
-        routes()
-    );
+    let app = create_test_app!(services(pool), routes());
 
     let response = actix_web::test::TestRequest::get()
         .uri("/projects/123e4567-e89b-12d3-a456-426614174000")
@@ -94,13 +83,9 @@ async fn test_project_route_get_project_by_id_succeeds(pool: PgPool) {
     assert!(project.enabled);
 }
 
-
 #[sqlx::test]
 async fn test_project_route_get_project_by_id_not_found(pool: PgPool) {
-    let app = create_test_app!(
-        services(pool),
-        routes()
-    );
+    let app = create_test_app!(services(pool), routes());
 
     let response = actix_web::test::TestRequest::get()
         .uri("/projects/123e4567-e89b-12d3-a456-426614174000")
@@ -112,13 +97,9 @@ async fn test_project_route_get_project_by_id_not_found(pool: PgPool) {
     assert_eq!(response.status(), actix_web::http::StatusCode::NOT_FOUND);
 }
 
-
 #[sqlx::test(fixtures("../fixtures/projects.sql"))]
 async fn test_project_route_patch_project_name_succeeds(pool: PgPool) {
-    let app = create_test_app!(
-        services(pool),
-        routes()
-    );
+    let app = create_test_app!(services(pool), routes());
 
     let payload = ProjectUpdatePayload {
         name: Some("testc".to_string()),
@@ -134,13 +115,10 @@ async fn test_project_route_patch_project_name_succeeds(pool: PgPool) {
 
     assert!(response.status().is_success());
 }
-    
+
 #[sqlx::test(fixtures("../fixtures/projects.sql"))]
 async fn test_project_route_patch_project_description_succeeds(pool: PgPool) {
-    let app = create_test_app!(
-        services(pool),
-        routes()
-    );
+    let app = create_test_app!(services(pool), routes());
 
     let payload = ProjectUpdatePayload {
         name: None,
@@ -162,13 +140,10 @@ async fn test_project_route_patch_project_description_succeeds(pool: PgPool) {
 
     assert!(response.status().is_success());
 }
-    
+
 #[sqlx::test(fixtures("../fixtures/projects.sql"))]
 async fn test_project_route_patch_project_enabled_succeeds(pool: PgPool) {
-    let app = create_test_app!(
-        services(pool),
-        routes()
-    );
+    let app = create_test_app!(services(pool), routes());
 
     let payload = ProjectUpdatePayload {
         name: None,
@@ -184,5 +159,3 @@ async fn test_project_route_patch_project_enabled_succeeds(pool: PgPool) {
 
     assert!(response.status().is_success());
 }
-    
-

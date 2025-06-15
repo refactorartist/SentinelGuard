@@ -121,7 +121,6 @@ impl Repository<Project> for ProjectRepository {
 
         query.push(" RETURNING id, name, description, enabled, created_at, updated_at");
 
-
         let updated_project = query
             .build()
             .fetch_one(&*self.pool)
