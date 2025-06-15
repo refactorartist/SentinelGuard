@@ -249,3 +249,85 @@ async fn test_project_route_delete_project_not_found(pool: PgPool) {
     assert!(response.status().is_client_error());
     assert_eq!(response.status(), actix_web::http::StatusCode::NOT_FOUND);
 }
+
+#[sqlx::test(fixtures("../fixtures/projects.sql"))]
+async fn test_project_route_list_projects_returns_all(pool: PgPool) {
+    let app = create_test_app!(services(pool), routes());
+    let response = actix_web::test::TestRequest::get()
+        .uri("/projects")
+        .send_request(&app)
+        .await;
+    assert!(response.status().is_success());
+    let projects: Vec<Project> = actix_web::test::read_body_json(response).await;
+    // There are 4 projects in the fixture
+    assert_eq!(projects.len(), 4);
+    // Check some fields for correctness
+    assert!(projects.iter().any(|p| p.name == "testa"));
+    assert!(projects.iter().any(|p| p.name == "testb"));
+    assert!(projects.iter().any(|p| p.name == "something"));
+}
+
+#[sqlx::test(fixtures("../fixtures/projects.sql"))]
+async fn test_project_route_list_projects_with_pagination(pool: PgPool) {
+    let app = create_test_app!(services(pool), routes());
+    // limit=2, offset=1
+    let response = actix_web::test::TestRequest::get()
+        .uri("/projects?limit=2&offset=1")
+        .send_request(&app)
+        .await;
+    assert!(response.status().is_success());
+    let projects: Vec<Project> = actix_web::test::read_body_json(response).await;
+    assert_eq!(projects.len(), 2);
+}
+
+#[sqlx::test(fixtures("../fixtures/projects.sql"))]
+async fn test_project_route_list_projects_filter_by_name(pool: PgPool) {
+    let app = create_test_app!(services(pool), routes());
+    let response = actix_web::test::TestRequest::get()
+        .uri("/projects?name=something")
+        .send_request(&app)
+        .await;
+    assert!(response.status().is_success());
+    let projects: Vec<Project> = actix_web::test::read_body_json(response).await;
+    assert_eq!(projects.len(), 2);
+    assert!(projects.iter().all(|p| p.name.contains("something")));
+}
+
+#[sqlx::test(fixtures("../fixtures/projects.sql"))]
+async fn test_project_route_list_projects_filter_by_enabled_true(pool: PgPool) {
+    let app = create_test_app!(services(pool), routes());
+    let response = actix_web::test::TestRequest::get()
+        .uri("/projects?enabled=true")
+        .send_request(&app)
+        .await;
+    assert!(response.status().is_success());
+    let projects: Vec<Project> = actix_web::test::read_body_json(response).await;
+    assert!(projects.len() > 0);
+    assert!(projects.iter().all(|p| p.enabled));
+}
+
+#[sqlx::test(fixtures("../fixtures/projects.sql"))]
+async fn test_project_route_list_projects_filter_by_enabled_false(pool: PgPool) {
+    let app = create_test_app!(services(pool), routes());
+    let response = actix_web::test::TestRequest::get()
+        .uri("/projects?enabled=false")
+        .send_request(&app)
+        .await;
+    assert!(response.status().is_success());
+    let projects: Vec<Project> = actix_web::test::read_body_json(response).await;
+    assert!(projects.len() > 0);
+    assert!(projects.iter().all(|p| !p.enabled));
+}
+
+#[sqlx::test]
+async fn test_project_route_list_projects_empty(pool: PgPool) {
+    let app = create_test_app!(services(pool), routes());
+    let response = actix_web::test::TestRequest::get()
+        .uri("/projects")
+        .send_request(&app)
+        .await;
+    assert!(response.status().is_success());
+    let projects: Vec<Project> = actix_web::test::read_body_json(response).await;
+    assert_eq!(projects.len(), 0);
+}
+
