@@ -152,16 +152,14 @@ impl Repository<Project> for ProjectRepository {
     }
 
     async fn delete(&self, id: Uuid) -> Result<bool, Error> {
-        let deleted_project = sqlx::query!("DELETE FROM projects WHERE id = $1", id,)
+        let result = sqlx::query!("DELETE FROM projects WHERE id = $1", id,)
             .execute(&*self.pool)
-            .await
-            .map_err(|_| Error::msg("No changes were made"));
+            .await;
 
-        if deleted_project.is_err() {
-            return Err(deleted_project.unwrap_err());
+        match result {
+            Ok(result) => Ok(result.rows_affected() == 1),
+            Err(error) => Err(error.into()),
         }
-
-        Ok(deleted_project.unwrap().rows_affected() > 0)
     }
 
     async fn find(
