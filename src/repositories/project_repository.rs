@@ -121,7 +121,7 @@ impl Repository<Project> for ProjectRepository {
 
         query.push(" RETURNING id, name, description, enabled, created_at, updated_at");
 
-        let updated_project = query
+        let result = query
             .build()
             .fetch_one(&*self.pool)
             .await
@@ -134,15 +134,21 @@ impl Repository<Project> for ProjectRepository {
                 updated_at: row.get("updated_at"),
             });
 
-        if updated_project.is_err() {
-            let error = updated_project.unwrap_err();
-            match error {
-                sqlx::Error::RowNotFound => return Err(Error::msg("Project not found")),
-                _ => return Err(Error::msg("No changes were made")),
-            }
-        }
+        match result {
+            Ok(project) => Ok(project),
+            Err(error) => match error {
+                sqlx::Error::RowNotFound => Err(Error::msg("Project not found")),
+                sqlx::Error::Database(e) => {
+                    let error_message = e.message();
 
-        Ok(updated_project.unwrap())
+                    match error_message {
+                        s if s.contains("unique constraint") || s.contains("duplicate key") => Err(Error::msg("Project name already exists")),
+                        _ => Err(Error::msg("No changes were made")),
+                    }
+                },
+                _ => Err(error.into()),
+            },
+        }
     }
 
     async fn delete(&self, id: Uuid) -> Result<bool, Error> {

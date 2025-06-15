@@ -48,6 +48,7 @@ pub async fn patch(
         match error_message.as_str() {
             "No changes to update" => return Err(actix_web::error::ErrorBadRequest(error_message)),
             "Project not found" => return Err(actix_web::error::ErrorNotFound(error_message)),
+            "Project name already exists" => return Err(actix_web::error::ErrorConflict(error_message)),
             _ => return Err(actix_web::error::ErrorInternalServerError(error_message)),
         }
     }
