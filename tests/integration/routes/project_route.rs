@@ -159,3 +159,24 @@ async fn test_project_route_patch_project_enabled_succeeds(pool: PgPool) {
 
     assert!(response.status().is_success());
 }
+
+
+#[sqlx::test(fixtures("../fixtures/projects.sql"))]
+async fn test_project_route_patch_project_empty_payload(pool: PgPool) {
+    let app = create_test_app!(services(pool), routes());
+
+    let payload = ProjectUpdatePayload {
+        name: None,
+        description: None,
+        enabled: None,
+    };
+
+    let response = actix_web::test::TestRequest::patch()
+        .uri("/projects/123e4567-e89b-12d3-a456-426614174000")
+        .set_json(&payload)
+        .send_request(&app)
+        .await;
+
+    assert!(response.status().is_client_error());
+    assert_eq!(response.status(), actix_web::http::StatusCode::BAD_REQUEST);
+}

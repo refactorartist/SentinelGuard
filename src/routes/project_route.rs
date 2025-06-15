@@ -42,7 +42,7 @@ pub async fn patch(
     let project = service
         .update(id.into_inner(), payload.into_inner())
         .await
-        .map_err(actix_web::error::ErrorInternalServerError)?;
+        .map_err(actix_web::error::ErrorBadRequest)?;
     Ok(HttpResponse::Ok().json(project))
 }
 
