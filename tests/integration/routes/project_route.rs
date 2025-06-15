@@ -222,3 +222,30 @@ async fn test_project_route_patch_project_duplicate_name_error(pool: PgPool) {
     assert!(response.status().is_client_error());
     assert_eq!(response.status(), actix_web::http::StatusCode::CONFLICT);
 }
+
+
+#[sqlx::test(fixtures("../fixtures/projects.sql"))]
+async fn test_project_route_delete_project_succeeds(pool: PgPool) {
+    let app = create_test_app!(services(pool), routes());
+
+    let response = actix_web::test::TestRequest::delete()
+        .uri("/projects/123e4567-e89b-12d3-a456-426614174000")
+        .send_request(&app)
+        .await;
+
+    assert!(response.status().is_success());
+    assert_eq!(response.status(), actix_web::http::StatusCode::NO_CONTENT);
+}
+
+#[sqlx::test]
+async fn test_project_route_delete_project_not_found(pool: PgPool) {
+    let app = create_test_app!(services(pool), routes());
+
+    let response = actix_web::test::TestRequest::delete()
+        .uri("/projects/123e4567-e89b-12d3-a456-426614174000")
+        .send_request(&app)
+        .await;
+
+    assert!(response.status().is_client_error());
+    assert_eq!(response.status(), actix_web::http::StatusCode::NOT_FOUND);
+}

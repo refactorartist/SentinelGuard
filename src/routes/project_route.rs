@@ -60,16 +60,15 @@ pub async fn delete(
     service: web::Data<ProjectService>,
     id: web::Path<uuid::Uuid>,
 ) -> Result<HttpResponse, Error> {
-    let deleted = service
+    let result = service
         .delete(id.into_inner())
-        .await
-        .map_err(actix_web::error::ErrorInternalServerError)?;
+        .await;
 
-    if !deleted {
-        return Err(actix_web::error::ErrorNotFound("Project not found"));
+    match result {
+        Ok(true) => Ok(HttpResponse::NoContent().finish()),
+        Ok(false) => Err(actix_web::error::ErrorNotFound("Project not found")),
+        Err(error) => Err(actix_web::error::ErrorInternalServerError(error)),
     }
-
-    Ok(HttpResponse::NoContent().finish())
 }
 
 pub async fn list(
