@@ -5,9 +5,27 @@ use sentinel_guard::{config::AppConfig, routes::project_route};
 use sqlx::postgres::PgPool;
 use std::{sync::Arc, time::Duration};
 use tokio::signal;
+use utoipa::OpenApi;
+
+use utoipa_swagger_ui::SwaggerUi;
 
 #[actix_web::main]
 async fn main() -> Result<(), anyhow::Error> {
+    #[derive(OpenApi)]
+    #[openapi(
+        paths(
+            project_route::post,
+            project_route::get,
+            project_route::patch,
+            project_route::delete,
+            project_route::list,
+        ),
+        tags(
+            (name = "SentinelGuard", description = "SentinelGuard API documentation.")
+        ),
+    )]
+    struct ApiDoc;
+
     let config = AppConfig::from_env(Some(true))?;
 
     let pool = Arc::new(PgPool::connect(&config.database_uri).await?);
@@ -19,6 +37,10 @@ async fn main() -> Result<(), anyhow::Error> {
 
     let server = HttpServer::new(move || {
         App::new()
+            .service(
+                SwaggerUi::new("/docs/{_:.*}")
+                    .url("/api-docs/openapi.json", ApiDoc::openapi()),
+            )
             .app_data(web::Data::new(project_service.clone()))
             .configure(project_route::configure_routes)
     })

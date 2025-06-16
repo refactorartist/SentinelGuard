@@ -74,6 +74,7 @@
 ### API Usage
 
 - The REST API is documented via OpenAPI/Swagger (see `/docs` endpoint when the server is running).
+- **Swagger UI is available at [`http://localhost:8080/docs`](http://localhost:8080/docs) when the server is running.**
 - All endpoints are async, return JSON, and require proper input validation.
 
 ### Logging & Configuration

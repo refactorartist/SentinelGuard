@@ -4,6 +4,8 @@ use uuid::Uuid;
 
 use crate::models::sort::SortOrder;
 
+use utoipa::ToSchema;
+
 #[derive(Debug, Serialize, Deserialize, Default)]
 pub struct Project {
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -15,21 +17,50 @@ pub struct Project {
     pub updated_at: DateTime<Utc>,
 }
 
-#[derive(Debug, Serialize, Deserialize, Default)]
+#[derive(Debug, Serialize, Deserialize, Default, ToSchema)]
+pub struct ProjectResponse {
+    #[schema(example = "123e4567-e89b-12d3-a456-426614174000")]
+    pub id: String,
+    #[schema(example = "Project Name")]
+    pub name: String,
+    #[schema(example = "Project Description")]
+    pub description: String,
+    #[schema(example = "true")]
+    pub enabled: bool,
+    #[schema(example = "2025-06-16T03:48:22.000Z")]
+    pub created_at: String,
+    #[schema(example = "2025-06-16T03:48:22.000Z")]
+    pub updated_at: String,
+}
+
+impl From<Project> for ProjectResponse {
+    fn from(value: Project) -> Self {
+        Self {
+            id: value.id.unwrap().to_string(),
+            name: value.name,
+            description: value.description,
+            enabled: value.enabled,
+            created_at: value.created_at.to_string(),
+            updated_at: value.updated_at.to_string(),
+        }
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize, Default, ToSchema)]
 pub struct ProjectFilter {
     pub name: Option<String>,
     pub description: Option<String>,
     pub enabled: Option<bool>,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone, ToSchema)]
 pub struct ProjectCreatePayload {
     pub name: String,
     pub description: String,
     pub enabled: bool,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone, ToSchema)]
 pub struct ProjectUpdatePayload {
     pub name: Option<String>,
     pub description: Option<String>,

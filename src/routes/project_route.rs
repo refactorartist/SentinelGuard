@@ -1,17 +1,25 @@
+use crate::models::pagination::Pagination;
+use crate::models::project::{ProjectFilter, ProjectResponse, ProjectSortOrder, ProjectSortableFields};
+use crate::models::sort::SortOrder;
 use crate::services::project_service::ProjectService;
 use crate::{
     models::{
-        pagination::Pagination,
-        project::{
-            ProjectCreatePayload, ProjectFilter, ProjectSortOrder, ProjectSortableFields,
-            ProjectUpdatePayload,
-        },
-        sort::SortOrder,
+        project::{ProjectCreatePayload, ProjectUpdatePayload},
     },
     services::base::Service,
 };
 use actix_web::{Error, HttpResponse, web};
 
+#[utoipa::path(
+    post,
+    path = "/projects",
+    tag = "Projects",
+    request_body = ProjectCreatePayload,
+    responses(
+        (status = 201, description = "Project created", body = ProjectResponse),
+        (status = 400, description = "Invalid request", body = String),
+    ),
+)]
 pub async fn post(
     service: web::Data<ProjectService>,
     payload: web::Json<ProjectCreatePayload>,
@@ -23,6 +31,18 @@ pub async fn post(
     Ok(HttpResponse::Created().json(project))
 }
 
+#[utoipa::path(
+    get,
+    path = "/projects/{id}",
+    tag = "Projects",
+    responses(
+        (status = 200, description = "Project found", body = ProjectResponse),
+        (status = 404, description = "Project not found", body = String),
+    ),
+    params(
+        ("id" = String<uuid::Uuid>, Path, description = "Project ID"),
+    ),
+)]
 pub async fn get(
     service: web::Data<ProjectService>,
     id: web::Path<uuid::Uuid>,
@@ -34,6 +54,21 @@ pub async fn get(
     Ok(HttpResponse::Ok().json(project))
 }
 
+#[utoipa::path(
+    patch,
+    path = "/projects/{id}",
+    tag = "Projects",
+    responses(
+        (status = 200, description = "Project updated", body = ProjectResponse),
+        (status = 400, description = "Invalid request", body = String),
+        (status = 404, description = "Project not found", body = String),
+        (status = 409, description = "Project name already exists", body = String),
+        (status = 500, description = "Internal server error", body = String),
+    ),
+    params(
+        ("id" = String<uuid::Uuid>, Path, description = "Project ID"),
+    ),
+)]
 pub async fn patch(
     service: web::Data<ProjectService>,
     id: web::Path<uuid::Uuid>,
@@ -56,6 +91,18 @@ pub async fn patch(
     Ok(HttpResponse::Ok().json(project.unwrap()))
 }
 
+#[utoipa::path(
+    delete,
+    path = "/projects/{id}",
+    tag = "Projects",
+    responses(
+        (status = 204, description = "Project deleted", body = ()),
+        (status = 404, description = "Project not found", body = String),
+    ),
+    params(
+        ("id" = String<uuid::Uuid>, Path, description = "Project ID"),
+    )
+)]
 pub async fn delete(
     service: web::Data<ProjectService>,
     id: web::Path<uuid::Uuid>,
@@ -71,6 +118,21 @@ pub async fn delete(
     }
 }
 
+#[utoipa::path(
+    get,
+    path = "/projects",
+    tag = "Projects",
+    responses(
+        (status = 200, description = "Projects found", body = Vec<ProjectResponse>),
+    ),
+    params(
+        ("name" = Option<String>, Query, description = "Filter projects by name"),
+        ("description" = Option<String>, Query, description = "Filter projects by description"),
+        ("enabled" = Option<bool>, Query, description = "Filter projects by enabled"),
+        ("offset" = Option<u32>, Query, description = "Offset for pagination"),
+        ("limit" = Option<u32>, Query, description = "Number of items per page"),
+    )
+)]
 pub async fn list(
     service: web::Data<ProjectService>,
     filter: web::Query<ProjectFilter>,
