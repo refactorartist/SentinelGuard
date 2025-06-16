@@ -1,0 +1,18 @@
+[package]
+name = "sentinel-guard"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+actix-web = { version = "4.11.0", features = ["rustls"] }
+anyhow = { version = "1.0.98", features = ["backtrace"] }
+async-trait = "0.1.88"
+chrono = { version = "0.4.41", features = ["serde"] }
+dotenvy = { version = "0.15.7", features = ["clap", "cli"] }
+serde = { version = "1.0.219", features = ["derive"] }
+sqlx = { version = "0.8.6", features = ["chrono", "macros", "postgres", "runtime-tokio", "uuid"] }
+tokio = { version = "1.45.1", features = ["full", "signal"] }
+utoipa = { version = "5.3.1", features = ["actix_extras"] }
+utoipa-actix-web = "0.1.2"
+utoipa-swagger-ui = { version = "9.0.2", features = ["actix-web"] }
+uuid = { version = "1.17.0", features = ["serde"] }
