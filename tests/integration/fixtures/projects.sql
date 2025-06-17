@@ -1,4 +1,4 @@
-INSERT INTO projects (id, name, description, created_at, updated_at, enabled) VALUES ('123e4567-e89b-12d3-a456-426614174000', 'testa', 'test', '2025-06-12 19:40:00', '2025-06-12 19:40:00', true);
-INSERT INTO projects (id, name, description, created_at, updated_at, enabled) VALUES ('123e4567-e89b-12d3-a456-426614174001', 'testb', 'test1', '2025-06-12 19:41:00', '2025-06-12 19:41:00', false);
-INSERT INTO projects (id, name, description, created_at, updated_at, enabled) VALUES ('123e4567-e89b-12d3-a456-426614173000', 'something', 'something', '2025-06-12 19:42:00', '2025-06-12 19:42:00', true);
-INSERT INTO projects (id, name, description, created_at, updated_at, enabled) VALUES ('123e4567-e89b-12d3-a456-426614173001', 'something1', 'something1', '2025-06-12 19:43:00', '2025-06-12 19:43:00', true);
+INSERT INTO projects (id, name, description, created_at, updated_at, enabled) VALUES ('123e4567-e89b-12d3-a456-426614174000', 'testa', 'test', NOW(), NOW(), true);
+INSERT INTO projects (id, name, description, created_at, updated_at, enabled) VALUES ('123e4567-e89b-12d3-a456-426614174001', 'testb', 'test1', NOW(), NOW(), false);
+INSERT INTO projects (id, name, description, created_at, updated_at, enabled) VALUES ('123e4567-e89b-12d3-a456-426614173000', 'something', 'something', NOW(), NOW(), true);
+INSERT INTO projects (id, name, description, created_at, updated_at, enabled) VALUES ('123e4567-e89b-12d3-a456-426614173001', 'something1', 'something1', NOW(), NOW(), true);

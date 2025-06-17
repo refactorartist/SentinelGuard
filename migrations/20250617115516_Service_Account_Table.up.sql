@@ -11,5 +11,7 @@ CREATE TABLE IF NOT EXISTS service_account (
 );
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_service_account_name ON service_account(name);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_service_account_email ON service_account(email);
 CREATE INDEX IF NOT EXISTS idx_service_account_enabled ON service_account(enabled);
+
 
