@@ -9,7 +9,7 @@ use sentinel_guard::{
         },
         sort::SortOrder,
     },
-    repositories::{base::Repository, service_account_repository::ServiceAccountRepository},
+    repositories::{base::Repository, service_account_repository::ServiceAccountRepository}, utils::security::SecretsManager,
 };
 use sqlx::PgPool;
 use uuid::Uuid;
@@ -26,11 +26,14 @@ async fn test_service_account_repository_create_with_valid_data_succeeds(pool: P
         enabled: true,
     };
 
-    let service_account = repository.create(payload).await.unwrap();
+    let service_account = repository.create(payload.clone()).await.unwrap();
+
+    let secrets_manager = SecretsManager::new(true).unwrap();
+    let decrypt_password = secrets_manager.decrypt(&service_account.secret, &service_account.id.unwrap()).unwrap();
 
     assert_eq!(service_account.name, "Test Service Account");
     assert_eq!(service_account.email, "test@example.com");
-    assert_eq!(service_account.secret, "supersecret");
+    assert_eq!(decrypt_password, "supersecret");
     assert_eq!(service_account.description, "Test Description");
     assert!(service_account.enabled);
 }
@@ -169,7 +172,11 @@ async fn test_service_account_repository_update_secret_field_succeeds(pool: PgPo
             description: None,
             enabled: None,
         },
-        |account| assert_eq!(account.secret, "new-secret"),
+        |account| {
+            let secrets_manager = SecretsManager::new(true).unwrap();
+            let decrypt_password = secrets_manager.decrypt(&account.secret, &account.id.unwrap()).unwrap();
+            assert_eq!(decrypt_password, "new-secret");
+        },
     )
     .await;
 }
