@@ -7,12 +7,23 @@ edition = "2024"
 actix-web = { version = "4.11.0", features = ["rustls"] }
 anyhow = { version = "1.0.98", features = ["backtrace"] }
 async-trait = "0.1.88"
+base64 = "0.22.1"
 chrono = { version = "0.4.41", features = ["serde"] }
 dotenvy = { version = "0.15.7", features = ["clap", "cli"] }
+hmac = "0.12.1"
+rand = { version = "0.8.5", features = ["std", "std_rng", "getrandom"] }
 serde = { version = "1.0.219", features = ["derive"] }
+sha2 = "0.10.9"
+sha3 = "0.10.8"
 sqlx = { version = "0.8.6", features = ["chrono", "macros", "postgres", "runtime-tokio", "uuid"] }
 tokio = { version = "1.45.1", features = ["full", "signal"] }
 utoipa = { version = "5.3.1", features = ["actix_extras"] }
 utoipa-actix-web = "0.1.2"
 utoipa-swagger-ui = { version = "9.0.2", features = ["actix-web"] }
-uuid = { version = "1.17.0", features = ["serde"] }
+uuid = { version = "1.17.0", features = ["v4", "serde"] }
+openssl = { version = "0.10", features = ["vendored"] }
+openssl-sys = { version = "0.9", features = ["vendored"] }
+jsonwebtoken = "9.3.1"
+time = "0.3.41"
+serde_json = "1.0.140"
+temp-env = "0.3.6"

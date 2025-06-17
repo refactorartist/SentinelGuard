@@ -14,29 +14,29 @@ impl AppConfig {
             dotenvy::dotenv().ok();
         }
 
-        let database_uri = match env::var("BURAQ_DATABASE_URI") {
+        let database_uri = match env::var("SENTINEL_GUARD_DATABASE_URI") {
             Ok(uri) => uri,
             Err(_) => {
                 return Err(anyhow::anyhow!(
-                    "BURAQ_DATABASE_URI environment variable is not set"
+                    "SENTINEL_GUARD_DATABASE_URI environment variable is not set"
                 ));
             }
         };
 
-        let host = match env::var("BURAQ_HOST") {
+        let host = match env::var("SENTINEL_GUARD_HOST") {
             Ok(h) => h,
             Err(_) => {
                 return Err(anyhow::anyhow!(
-                    "BURAQ_HOST environment variable is not set"
+                    "SENTINEL_GUARD_HOST environment variable is not set"
                 ));
             }
         };
 
-        let port = match env::var("BURAQ_PORT") {
+        let port = match env::var("SENTINEL_GUARD_PORT") {
             Ok(p) => p,
             Err(_) => {
                 return Err(anyhow::anyhow!(
-                    "BURAQ_PORT environment variable is not set"
+                    "SENTINEL_GUARD_PORT environment variable is not set"
                 ));
             }
         };

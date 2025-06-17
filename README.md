@@ -38,7 +38,7 @@
   devbox run app
   ```
   The server will start using the host and port specified in your `.env` file (see `.env.sample` for required variables).
-  Be sure to set `BURAQ_HOST`, `BURAQ_PORT` and any other required variables in your environment file.
+  Be sure to set `SENTINEL_GUARD_HOST`, `SENTINEL_GUARD_PORT` and any other required variables in your environment file.
 
   The `DATABASE_URL` environment variable is by sqlx and rust-analyzer to check database queries.
 

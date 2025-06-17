@@ -6,6 +6,7 @@ use crate::models::service_account::{
 };
 use crate::models::pagination::Pagination;
 use crate::repositories::base::Repository;
+use crate::utils::security::SecretsManager;
 use anyhow::Error;
 use async_trait::async_trait;
 use chrono::Utc;
@@ -16,11 +17,12 @@ use uuid::Uuid;
 #[derive(Clone)]
 pub struct ServiceAccountRepository {
     pub pool: Arc<sqlx::postgres::PgPool>,
+    pub secrets_manager: SecretsManager,
 }
 
 impl ServiceAccountRepository {
     pub fn new(pool: Arc<sqlx::postgres::PgPool>) -> Self {
-        Self { pool }
+        Self { pool, secrets_manager: SecretsManager::new(true).unwrap() }
     }
 }
 
@@ -32,11 +34,12 @@ impl Repository<ServiceAccount> for ServiceAccountRepository {
     type Sort = ServiceAccountSortOrder;
 
     async fn create(&self, item: Self::CreatePayload) -> Result<ServiceAccount, Error> {
+        let id = Uuid::new_v4();
         let service_account = ServiceAccount {
-            id: None,
+            id: Some(id),
             name: item.name,
             email: item.email,
-            secret: item.secret,
+            secret: self.secrets_manager.encrypt(&item.secret, &id)?,
             description: item.description,
             enabled: item.enabled,
             created_at: Utc::now(),
@@ -46,10 +49,11 @@ impl Repository<ServiceAccount> for ServiceAccountRepository {
         let created_service_account = sqlx::query_as!(
             ServiceAccount,
             r#"
-            INSERT INTO service_account (name, email, secret, description, enabled) 
-            VALUES ($1, $2, $3, $4, $5) 
+            INSERT INTO service_account (id, name, email, secret, description, enabled) 
+            VALUES ($1, $2, $3, $4, $5, $6) 
             RETURNING id, name, email, secret, description, enabled, created_at, updated_at
             "#,
+            service_account.id,
             service_account.name,
             service_account.email,
             service_account.secret,
@@ -103,7 +107,8 @@ impl Repository<ServiceAccount> for ServiceAccountRepository {
         }
 
         if let Some(secret) = update.secret {
-            changes.push(("secret", secret));
+            let encrypted_secret = self.secrets_manager.encrypt(&secret, &id)?;
+            changes.push(("secret", encrypted_secret));
         }
 
         if let Some(description) = update.description {
