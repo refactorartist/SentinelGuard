@@ -6,26 +6,21 @@ use crate::{
             ServiceAccountSortOrder, ServiceAccountUpdatePayload,
         },
     },
-    repositories::{
-        service_account_repository::ServiceAccountRepository,
-        base::Repository,
-    },
+    repositories::{base::Repository, service_account_repository::ServiceAccountRepository},
     services::base::Service,
 };
+use anyhow::Error;
 use async_trait::async_trait;
 use uuid::Uuid;
-use anyhow::Error;
 
 #[derive(Clone)]
 pub struct ServiceAccountService {
-    pub repository: ServiceAccountRepository
+    pub repository: ServiceAccountRepository,
 }
 
 impl ServiceAccountService {
-    pub fn new (repo: ServiceAccountRepository) -> Self {
-        return Self{
-            repository: repo
-        }
+    pub fn new(repo: ServiceAccountRepository) -> Self {
+        Self { repository: repo }
     }
 }
 
@@ -35,7 +30,6 @@ impl Service<ServiceAccount> for ServiceAccountService {
     type UpdatePayload = ServiceAccountUpdatePayload;
     type Filter = ServiceAccountFilter;
     type Sort = ServiceAccountSortOrder;
-    
 
     async fn create(&self, item: Self::CreatePayload) -> Result<ServiceAccount, Error> {
         self.repository.create(item).await
@@ -60,6 +54,5 @@ impl Service<ServiceAccount> for ServiceAccountService {
         pagination: Option<Pagination>,
     ) -> Result<Vec<ServiceAccount>, Error> {
         self.repository.find(filter, sort, pagination).await
-    }    
-    
+    }
 }

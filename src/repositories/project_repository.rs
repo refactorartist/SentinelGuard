@@ -142,10 +142,12 @@ impl Repository<Project> for ProjectRepository {
                     let error_message = e.message();
 
                     match error_message {
-                        s if s.contains("unique constraint") || s.contains("duplicate key") => Err(Error::msg("Project name already exists")),
+                        s if s.contains("unique constraint") || s.contains("duplicate key") => {
+                            Err(Error::msg("Project name already exists"))
+                        }
                         _ => Err(Error::msg("No changes were made")),
                     }
-                },
+                }
                 _ => Err(error.into()),
             },
         }

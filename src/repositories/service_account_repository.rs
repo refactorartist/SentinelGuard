@@ -1,10 +1,10 @@
 use std::sync::Arc;
 
+use crate::models::pagination::Pagination;
 use crate::models::service_account::{
     ServiceAccount, ServiceAccountCreatePayload, ServiceAccountFilter, ServiceAccountSortOrder,
     ServiceAccountUpdatePayload,
 };
-use crate::models::pagination::Pagination;
 use crate::repositories::base::Repository;
 use crate::utils::security::SecretsManager;
 use anyhow::Error;
@@ -22,7 +22,10 @@ pub struct ServiceAccountRepository {
 
 impl ServiceAccountRepository {
     pub fn new(pool: Arc<sqlx::postgres::PgPool>) -> Self {
-        Self { pool, secrets_manager: SecretsManager::new(true).unwrap() }
+        Self {
+            pool,
+            secrets_manager: SecretsManager::new(true).unwrap(),
+        }
     }
 }
 
@@ -66,7 +69,8 @@ impl Repository<ServiceAccount> for ServiceAccountRepository {
 
         if created_service_account.is_err() {
             return Err(Error::msg(
-                "Failed to create service account: ".to_owned() + &created_service_account.unwrap_err().to_string(),
+                "Failed to create service account: ".to_owned()
+                    + &created_service_account.unwrap_err().to_string(),
             ));
         }
 
@@ -93,7 +97,6 @@ impl Repository<ServiceAccount> for ServiceAccountRepository {
 
         Ok(service_account)
     }
-
 
     async fn update(&self, id: Uuid, update: Self::UpdatePayload) -> Result<ServiceAccount, Error> {
         let mut changes = Vec::new();
@@ -141,7 +144,9 @@ impl Repository<ServiceAccount> for ServiceAccountRepository {
 
         query.push(", updated_at = ").push_bind(Utc::now());
         query.push(" WHERE id = ").push_bind(id);
-        query.push(" RETURNING id, name, email, secret, description, enabled, created_at, updated_at");
+        query.push(
+            " RETURNING id, name, email, secret, description, enabled, created_at, updated_at",
+        );
 
         let result = query
             .build()

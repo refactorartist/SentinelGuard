@@ -349,11 +349,10 @@ impl Default for KeyBuilder {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     use jsonwebtoken::Algorithm;
     use jsonwebtoken::{DecodingKey, Validation, decode};
     use serde_json;
-    
 
     #[test]
     fn test_generate_hmac_key() {
@@ -551,63 +550,59 @@ mod tests {
         // Serialize to JSON
         let json = serde_json::to_string(&claims).unwrap();
         let value: serde_json::Value = serde_json::from_str(&json).unwrap();
-        
+
         assert_eq!(value["sub"], "user123");
         assert_eq!(value["iss"], "test-issuer");
         assert_eq!(value["aud"][0], "aud1");
         assert!(value.get("nbf").is_none()); // Should be omitted when None
         assert!(value.get("scopes").is_none()); // Should be omitted when None
     }
-    
+
     #[test]
     fn test_claims_with_scopes() {
         let scopes = vec!["read:project".to_string(), "write:project".to_string()];
-        let claims = Claims::new("user123", 3600)
-            .with_scopes(scopes.clone());
-            
+        let claims = Claims::new("user123", 3600).with_scopes(scopes.clone());
+
         // Serialize to JSON
         let json = serde_json::to_string(&claims).unwrap();
         let value: serde_json::Value = serde_json::from_str(&json).unwrap();
-        
+
         // Verify scopes are included in the serialized output
         assert!(value.get("scopes").is_some());
         let serialized_scopes = value["scopes"].as_array().unwrap();
         assert_eq!(serialized_scopes.len(), 2);
         assert_eq!(serialized_scopes[0], "read:project");
         assert_eq!(serialized_scopes[1], "write:project");
-        
+
         // Test with empty scopes (should be omitted)
-        let claims_empty = Claims::new("user123", 3600)
-            .with_scopes(Vec::new());
+        let claims_empty = Claims::new("user123", 3600).with_scopes(Vec::new());
         let json_empty = serde_json::to_string(&claims_empty).unwrap();
         let value_empty: serde_json::Value = serde_json::from_str(&json_empty).unwrap();
         assert!(value_empty.get("scopes").is_none());
     }
-    
+
     #[test]
     fn test_claims_with_meta() {
         use std::collections::HashMap;
-        
+
         let mut meta = HashMap::new();
         meta.insert("key1".to_string(), "value1".to_string());
         meta.insert("key2".to_string(), "value2".to_string());
-        
-        let claims = Claims::new("user123", 3600)
-            .with_meta(meta.clone());
-            
+
+        let claims = Claims::new("user123", 3600).with_meta(meta.clone());
+
         // Serialize to JSON
         let json = serde_json::to_string(&claims).unwrap();
         let value: serde_json::Value = serde_json::from_str(&json).unwrap();
-        
+
         // Verify meta is included in the serialized output
         assert!(value.get("meta").is_some());
         let serialized_meta = value["meta"].as_object().unwrap();
         assert_eq!(serialized_meta["key1"], "value1");
         assert_eq!(serialized_meta["key2"], "value2");
-        
+
         // Test with empty meta (should be omitted)
-        let claims_empty = Claims::new("user123", 3600)
-            .with_meta(HashMap::new());
+        let claims_empty = Claims::new("user123", 3600).with_meta(HashMap::new());
         let json_empty = serde_json::to_string(&claims_empty).unwrap();
         let value_empty: serde_json::Value = serde_json::from_str(&json_empty).unwrap();
         assert!(value_empty.get("meta").is_none());

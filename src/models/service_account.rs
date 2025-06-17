@@ -142,8 +142,14 @@ mod tests {
         assert_eq!(String::from(ServiceAccountSortableFields::Id), "id");
         assert_eq!(String::from(ServiceAccountSortableFields::Name), "name");
         assert_eq!(String::from(ServiceAccountSortableFields::Email), "email");
-        assert_eq!(String::from(ServiceAccountSortableFields::UpdatedAt), "updated_at");
-        assert_eq!(String::from(ServiceAccountSortableFields::CreatedAt), "created_at");
+        assert_eq!(
+            String::from(ServiceAccountSortableFields::UpdatedAt),
+            "updated_at"
+        );
+        assert_eq!(
+            String::from(ServiceAccountSortableFields::CreatedAt),
+            "created_at"
+        );
     }
 
     #[test]
