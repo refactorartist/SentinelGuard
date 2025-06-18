@@ -3,7 +3,9 @@ use std::sync::Arc;
 use sqlx::PgPool;
 
 use sentinel_guard::{
-    models::service_account::{ServiceAccount, ServiceAccountCreatePayload, ServiceAccountUpdatePayload},
+    models::service_account::{
+        ServiceAccount, ServiceAccountCreatePayload, ServiceAccountUpdatePayload,
+    },
     repositories::service_account_repository::ServiceAccountRepository,
     routes::service_account_route,
     services::service_account_service::ServiceAccountService,
@@ -12,7 +14,9 @@ use sentinel_guard::{
 use crate::create_test_app;
 
 fn services(pool: PgPool) -> Vec<ServiceAccountService> {
-    vec![ServiceAccountService::new(ServiceAccountRepository::new(Arc::new(pool)))]
+    vec![ServiceAccountService::new(ServiceAccountRepository::new(
+        Arc::new(pool),
+    ))]
 }
 
 fn routes() -> Vec<fn(&mut actix_web::web::ServiceConfig)> {
@@ -69,9 +73,10 @@ async fn test_service_account_route_create_service_account_with_duplicate_name_f
     assert_eq!(response.status(), actix_web::http::StatusCode::BAD_REQUEST);
 }
 
-
 #[sqlx::test(fixtures("../fixtures/service_accounts.sql"))]
-async fn test_service_account_route_create_service_account_with_duplicate_email_fails(pool: PgPool) {
+async fn test_service_account_route_create_service_account_with_duplicate_email_fails(
+    pool: PgPool,
+) {
     let app = create_test_app!(services(pool), routes());
 
     let service_account = ServiceAccountCreatePayload {
@@ -92,7 +97,6 @@ async fn test_service_account_route_create_service_account_with_duplicate_email_
 
     assert_eq!(response.status(), actix_web::http::StatusCode::BAD_REQUEST);
 }
-
 
 #[sqlx::test(fixtures("../fixtures/service_accounts.sql"))]
 async fn test_service_account_route_get_service_account_by_id_succeeds(pool: PgPool) {
@@ -132,7 +136,7 @@ async fn test_service_account_route_get_service_account_by_id_not_found(pool: Pg
 async fn test_service_account_route_patch_service_account_name_succeeds(pool: PgPool) {
     let app = create_test_app!(services(pool), routes());
 
-    let payload  = ServiceAccountUpdatePayload {
+    let payload = ServiceAccountUpdatePayload {
         name: Some("testc".to_string()),
         description: None,
         enabled: None,
@@ -259,7 +263,6 @@ async fn test_service_account_route_patch_service_account_duplicate_name_error(p
     assert_eq!(response.status(), actix_web::http::StatusCode::CONFLICT);
 }
 
-
 #[sqlx::test(fixtures("../fixtures/service_accounts.sql"))]
 async fn test_service_account_route_patch_service_account_duplicate_email_error(pool: PgPool) {
     let app = create_test_app!(services(pool), routes());
@@ -281,7 +284,6 @@ async fn test_service_account_route_patch_service_account_duplicate_email_error(
     assert!(response.status().is_client_error());
     assert_eq!(response.status(), actix_web::http::StatusCode::CONFLICT);
 }
-
 
 #[sqlx::test(fixtures("../fixtures/service_accounts.sql"))]
 async fn test_service_account_route_delete_service_account_succeeds(pool: PgPool) {

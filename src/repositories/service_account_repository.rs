@@ -88,7 +88,7 @@ impl Repository<ServiceAccount> for ServiceAccountRepository {
                 }
                 _ => Err(error.into()),
             },
-        }    
+        }
     }
 
     async fn read(&self, id: Uuid) -> Result<Option<ServiceAccount>, Error> {
@@ -176,7 +176,6 @@ impl Repository<ServiceAccount> for ServiceAccountRepository {
                 created_at: row.get("created_at"),
                 updated_at: row.get("updated_at"),
             });
-
 
         match result {
             Ok(service_account) => Ok(service_account),
