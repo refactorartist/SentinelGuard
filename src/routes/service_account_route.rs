@@ -38,18 +38,18 @@ pub async fn post(
         (status = 404, description = "Service account not found", body = String),
     ),
     params(
-        ("id" = String<uuid::Uuid>, Path, description = "Project ID"),
+        ("id" = String<uuid::Uuid>, Path, description = "Service Account ID"),
     ),
 )]
 pub async fn get(
     service: web::Data<ServiceAccountService>,
     id: web::Path<uuid::Uuid>,
 ) -> Result<HttpResponse, Error> {
-    let project = service
+    let service_account = service
         .read(id.into_inner())
         .await
         .map_err(actix_web::error::ErrorNotFound)?;
-    Ok(HttpResponse::Ok().json(project))
+    Ok(HttpResponse::Ok().json(service_account))
 }
 
 #[utoipa::path(
@@ -65,7 +65,7 @@ pub async fn get(
         (status = 500, description = "Internal server error", body = String),
     ),
     params(
-        ("id" = String<uuid::Uuid>, Path, description = "Project ID"),
+        ("id" = String<uuid::Uuid>, Path, description = "Service Account ID"),
     ),
 )]
 pub async fn patch(
@@ -73,10 +73,10 @@ pub async fn patch(
     id: web::Path<uuid::Uuid>,
     payload: web::Json<ServiceAccountUpdatePayload>,
 ) -> Result<HttpResponse, Error> {
-    let project = service.update(id.into_inner(), payload.into_inner()).await;
+    let service_account = service.update(id.into_inner(), payload.into_inner()).await;
 
-    if project.is_err() {
-        let error_message = project.unwrap_err().to_string();
+    if service_account.is_err() {
+        let error_message = service_account.unwrap_err().to_string();
         match error_message.as_str() {
             "No changes to update" => return Err(actix_web::error::ErrorBadRequest(error_message)),
             "Service account not found" => return Err(actix_web::error::ErrorNotFound(error_message)),
@@ -90,7 +90,7 @@ pub async fn patch(
         }
     }
 
-    Ok(HttpResponse::Ok().json(project.unwrap()))
+    Ok(HttpResponse::Ok().json(service_account.unwrap()))
 }
 
 #[utoipa::path(
@@ -113,22 +113,22 @@ pub async fn delete(
 
     match result {
         Ok(true) => Ok(HttpResponse::NoContent().finish()),
-        Ok(false) => Err(actix_web::error::ErrorNotFound("Project not found")),
+        Ok(false) => Err(actix_web::error::ErrorNotFound("Service account not found")),
         Err(error) => Err(actix_web::error::ErrorInternalServerError(error)),
     }
 }
 
 #[utoipa::path(
     get,
-    path = "/projects",
-    tag = "Projects",
+    path = "/service-accounts",
+    tag = "Service Accounts",
     responses(
-        (status = 200, description = "Projects found", body = Vec<ServiceAccountResponse>),
+        (status = 200, description = "Service accounts found", body = Vec<ServiceAccountResponse>),
     ),
     params(
-        ("name" = Option<String>, Query, description = "Filter projects by name"),
-        ("description" = Option<String>, Query, description = "Filter projects by description"),
-        ("enabled" = Option<bool>, Query, description = "Filter projects by enabled"),
+        ("name" = Option<String>, Query, description = "Filter service accounts by name"),
+        ("description" = Option<String>, Query, description = "Filter service accounts by description"),
+        ("enabled" = Option<bool>, Query, description = "Filter service accounts by enabled"),
         ("offset" = Option<u32>, Query, description = "Offset for pagination"),
         ("limit" = Option<u32>, Query, description = "Number of items per page"),
     )
@@ -142,7 +142,7 @@ pub async fn list(
         ServiceAccountSortableFields::Id,
         SortOrder::Asc,
     )];
-    let projects = service
+    let service_accounts = service
         .find(
             filter.into_inner(),
             Some(sort),
@@ -150,7 +150,7 @@ pub async fn list(
         )
         .await
         .map_err(actix_web::error::ErrorInternalServerError)?;
-    Ok(HttpResponse::Ok().json(projects))
+    Ok(HttpResponse::Ok().json(service_accounts))
 }
 
 pub fn configure_routes(config: &mut actix_web::web::ServiceConfig) {
