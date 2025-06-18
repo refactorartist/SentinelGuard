@@ -79,10 +79,12 @@ pub async fn patch(
         let error_message = service_account.unwrap_err().to_string();
         match error_message.as_str() {
             "No changes to update" => return Err(actix_web::error::ErrorBadRequest(error_message)),
-            "Service account not found" => return Err(actix_web::error::ErrorNotFound(error_message)),
+            "Service account not found" => {
+                return Err(actix_web::error::ErrorNotFound(error_message));
+            }
             "Service account name already exists" => {
                 return Err(actix_web::error::ErrorConflict(error_message));
-            },
+            }
             "Service account email already exists" => {
                 return Err(actix_web::error::ErrorConflict(error_message));
             }
