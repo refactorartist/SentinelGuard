@@ -1,7 +1,7 @@
 -- Add up migration script here
 CREATE TABLE IF NOT EXISTS project_scopes (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    project_id UUID NOT NULL,
+    project_id UUID NOT NULL REFERENCES projects(id),
     scope TEXT NOT NULL,
     description TEXT NOT NULL,
     enabled BOOLEAN NOT NULL,
