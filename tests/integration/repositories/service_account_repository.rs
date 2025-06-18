@@ -9,7 +9,8 @@ use sentinel_guard::{
         },
         sort::SortOrder,
     },
-    repositories::{base::Repository, service_account_repository::ServiceAccountRepository}, utils::security::SecretsManager,
+    repositories::{base::Repository, service_account_repository::ServiceAccountRepository},
+    utils::security::SecretsManager,
 };
 use sqlx::PgPool;
 use uuid::Uuid;
@@ -29,7 +30,9 @@ async fn test_service_account_repository_create_with_valid_data_succeeds(pool: P
     let service_account = repository.create(payload.clone()).await.unwrap();
 
     let secrets_manager = SecretsManager::new(true).unwrap();
-    let decrypt_password = secrets_manager.decrypt(&service_account.secret, &service_account.id.unwrap()).unwrap();
+    let decrypt_password = secrets_manager
+        .decrypt(&service_account.secret, &service_account.id.unwrap())
+        .unwrap();
 
     assert_eq!(service_account.name, "Test Service Account");
     assert_eq!(service_account.email, "test@example.com");
@@ -37,7 +40,6 @@ async fn test_service_account_repository_create_with_valid_data_succeeds(pool: P
     assert_eq!(service_account.description, "Test Description");
     assert!(service_account.enabled);
 }
-
 
 #[sqlx::test]
 async fn test_service_account_repository_create_with_duplicate_name_fails(pool: PgPool) {
@@ -61,14 +63,8 @@ async fn test_service_account_repository_create_with_duplicate_name_fails(pool: 
     assert!(result.is_err());
     let error_message = result.unwrap_err().to_string();
 
-    dbg!(&error_message);
-    
-    assert!(error_message.contains("Failed to create service account"));
-    assert!(error_message.contains("idx_service_account_name"));
-    assert!(error_message.contains("duplicate key"));
-
+    assert!(error_message.contains("Service account name already exists"));
 }
-
 
 #[sqlx::test]
 async fn test_service_account_repository_create_with_duplicate_email_fails(pool: PgPool) {
@@ -92,12 +88,7 @@ async fn test_service_account_repository_create_with_duplicate_email_fails(pool:
     assert!(result.is_err());
     let error_message = result.unwrap_err().to_string();
 
-    dbg!(&error_message);
-    
-    assert!(error_message.contains("Failed to create service account"));
-    assert!(error_message.contains("idx_service_account_email"));
-    assert!(error_message.contains("duplicate key"));
-
+    assert!(error_message.contains("Service account email already exists"));
 }
 
 #[sqlx::test(fixtures("../fixtures/service_accounts.sql"))]
@@ -174,7 +165,9 @@ async fn test_service_account_repository_update_secret_field_succeeds(pool: PgPo
         },
         |account| {
             let secrets_manager = SecretsManager::new(true).unwrap();
-            let decrypt_password = secrets_manager.decrypt(&account.secret, &account.id.unwrap()).unwrap();
+            let decrypt_password = secrets_manager
+                .decrypt(&account.secret, &account.id.unwrap())
+                .unwrap();
             assert_eq!(decrypt_password, "new-secret");
         },
     )
@@ -210,13 +203,17 @@ async fn test_service_account_repository_update_duplicate_name_fails(pool: PgPoo
     };
 
     // Second update with same name should fail
-    let result = repository.update(Uuid::parse_str("123e4567-e89b-12d3-a456-426614174000").unwrap(), payload).await;
+    let result = repository
+        .update(
+            Uuid::parse_str("123e4567-e89b-12d3-a456-426614174000").unwrap(),
+            payload,
+        )
+        .await;
     assert!(result.is_err());
     let error_message = result.unwrap_err().to_string();
 
-    assert!(error_message.contains("Service account with this name already exists"));
+    assert!(error_message.contains("Service account name already exists"));
 }
-
 
 #[sqlx::test(fixtures("../fixtures/service_accounts.sql"))]
 async fn test_service_account_repository_update_duplicate_email_fails(pool: PgPool) {
@@ -231,13 +228,17 @@ async fn test_service_account_repository_update_duplicate_email_fails(pool: PgPo
     };
 
     // Second update with same name should fail
-    let result = repository.update(Uuid::parse_str("123e4567-e89b-12d3-a456-426614174000").unwrap(), payload).await;
+    let result = repository
+        .update(
+            Uuid::parse_str("123e4567-e89b-12d3-a456-426614174000").unwrap(),
+            payload,
+        )
+        .await;
     assert!(result.is_err());
     let error_message = result.unwrap_err().to_string();
 
-    assert!(error_message.contains("Service account with this email already exists"));
+    assert!(error_message.contains("Service account email already exists"));
 }
-
 
 #[sqlx::test(fixtures("../fixtures/service_accounts.sql"))]
 async fn test_service_account_repository_update_enabled_to_false_succeeds(pool: PgPool) {
@@ -328,10 +329,7 @@ async fn test_service_account_repository_find_with_no_filters_returns_all_accoun
     let sort = None;
     let pagination = None;
 
-    let accounts = repository
-        .find(filter, sort, pagination)
-        .await
-        .unwrap();
+    let accounts = repository.find(filter, sort, pagination).await.unwrap();
 
     assert_eq!(accounts.len(), 3);
 }
@@ -347,10 +345,7 @@ async fn test_service_account_repository_find_with_name_filter(pool: PgPool) {
     let sort = None;
     let pagination = None;
 
-    let accounts = repository
-        .find(filter, sort, pagination)
-        .await
-        .unwrap();
+    let accounts = repository.find(filter, sort, pagination).await.unwrap();
 
     assert_eq!(accounts.len(), 1);
     assert_eq!(accounts[0].name, "Test Account 1");
@@ -367,10 +362,7 @@ async fn test_service_account_repository_find_with_email_filter(pool: PgPool) {
     let sort = None;
     let pagination = None;
 
-    let accounts = repository
-        .find(filter, sort, pagination)
-        .await
-        .unwrap();
+    let accounts = repository.find(filter, sort, pagination).await.unwrap();
 
     assert_eq!(accounts.len(), 1);
     assert_eq!(accounts[0].email, "test2@example.com");
@@ -387,10 +379,7 @@ async fn test_service_account_repository_find_with_enabled_filter(pool: PgPool) 
     let sort = None;
     let pagination = None;
 
-    let accounts = repository
-        .find(filter, sort, pagination)
-        .await
-        .unwrap();
+    let accounts = repository.find(filter, sort, pagination).await.unwrap();
 
     assert_eq!(accounts.len(), 2);
     assert!(accounts[0].enabled);
@@ -408,10 +397,7 @@ async fn test_service_account_repository_find_with_name_ascending_sort(pool: PgP
     )]);
     let pagination = None;
 
-    let accounts = repository
-        .find(filter, sort, pagination)
-        .await
-        .unwrap();
+    let accounts = repository.find(filter, sort, pagination).await.unwrap();
 
     assert_eq!(accounts.len(), 3);
     assert_eq!(accounts[0].name, "Account A");
@@ -430,10 +416,7 @@ async fn test_service_account_repository_find_with_name_descending_sort(pool: Pg
     )]);
     let pagination = None;
 
-    let accounts = repository
-        .find(filter, sort, pagination)
-        .await
-        .unwrap();
+    let accounts = repository.find(filter, sort, pagination).await.unwrap();
 
     assert_eq!(accounts.len(), 3);
     assert_eq!(accounts[0].name, "Account C");
@@ -452,10 +435,7 @@ async fn test_service_account_repository_find_with_limit_pagination(pool: PgPool
         offset: None,
     });
 
-    let accounts = repository
-        .find(filter, sort, pagination)
-        .await
-        .unwrap();
+    let accounts = repository.find(filter, sort, pagination).await.unwrap();
 
     assert_eq!(accounts.len(), 2);
 }
@@ -471,10 +451,7 @@ async fn test_service_account_repository_find_with_offset_pagination(pool: PgPoo
         offset: Some(1),
     });
 
-    let accounts = repository
-        .find(filter, sort, pagination)
-        .await
-        .unwrap();
+    let accounts = repository.find(filter, sort, pagination).await.unwrap();
 
     assert_eq!(accounts.len(), 2);
 }

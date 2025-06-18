@@ -47,8 +47,6 @@ async fn test_project_repository_create_project_with_duplicate_name_fails(pool: 
     // Add another record with the same name
     let project = project_repository.create(payload.clone()).await;
 
-    dbg!(&project);
-
     assert!(project.is_err());
 }
 
@@ -204,9 +202,9 @@ async fn test_project_repository_delete_nonexistent_project_returns_false(pool: 
         .delete(Uuid::parse_str("123e4567-e89b-12d3-a456-426614174002").unwrap())
         .await;
 
-    assert!(is_deleted.is_ok());   
+    assert!(is_deleted.is_ok());
     let is_deleted = is_deleted.unwrap();
-    assert_eq!(is_deleted, false);
+    assert!(!is_deleted);
 }
 
 #[sqlx::test(fixtures("../fixtures/projects.sql"))]

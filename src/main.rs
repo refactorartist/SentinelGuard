@@ -1,6 +1,8 @@
 use actix_web::{App, HttpServer, web};
 use sentinel_guard::repositories::project_repository::ProjectRepository;
+use sentinel_guard::repositories::service_account_repository::ServiceAccountRepository;
 use sentinel_guard::services::project_service::ProjectService;
+use sentinel_guard::services::service_account_service::ServiceAccountService;
 use sentinel_guard::{config::AppConfig, routes::project_route};
 use sqlx::postgres::PgPool;
 use std::{sync::Arc, time::Duration};
@@ -31,6 +33,8 @@ async fn main() -> Result<(), anyhow::Error> {
     let pool = Arc::new(PgPool::connect(&config.database_uri).await?);
 
     let project_service = ProjectService::new(ProjectRepository::new(pool.clone()));
+    let service_account_service =
+        ServiceAccountService::new(ServiceAccountRepository::new(pool.clone()));
 
     let host = config.host;
     let port = config.port;
@@ -38,10 +42,10 @@ async fn main() -> Result<(), anyhow::Error> {
     let server = HttpServer::new(move || {
         App::new()
             .service(
-                SwaggerUi::new("/docs/{_:.*}")
-                    .url("/api-docs/openapi.json", ApiDoc::openapi()),
+                SwaggerUi::new("/docs/{_:.*}").url("/api-docs/openapi.json", ApiDoc::openapi()),
             )
             .app_data(web::Data::new(project_service.clone()))
+            .app_data(web::Data::new(service_account_service.clone()))
             .configure(project_route::configure_routes)
     })
     .bind((host.clone(), port))?

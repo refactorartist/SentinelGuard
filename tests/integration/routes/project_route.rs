@@ -9,8 +9,6 @@ use sentinel_guard::{
     services::project_service::ProjectService,
 };
 
-include!("../../commons/macros.rs");
-
 fn services(pool: PgPool) -> Vec<ProjectService> {
     vec![ProjectService::new(ProjectRepository::new(Arc::new(pool)))]
 }
@@ -18,6 +16,8 @@ fn services(pool: PgPool) -> Vec<ProjectService> {
 fn routes() -> Vec<fn(&mut actix_web::web::ServiceConfig)> {
     vec![project_route::configure_routes]
 }
+
+use crate::create_test_app;
 
 #[sqlx::test]
 async fn test_project_route_create_project_with_valid_data_succeeds(pool: PgPool) {
@@ -134,10 +134,6 @@ async fn test_project_route_patch_project_description_succeeds(pool: PgPool) {
 
     let (_request, response) = response.into_parts();
 
-    let body = response.body();
-
-    dbg!(&body);
-
     assert!(response.status().is_success());
 }
 
@@ -160,7 +156,6 @@ async fn test_project_route_patch_project_enabled_succeeds(pool: PgPool) {
     assert!(response.status().is_success());
 }
 
-
 #[sqlx::test(fixtures("../fixtures/projects.sql"))]
 async fn test_project_route_patch_project_empty_payload(pool: PgPool) {
     let app = create_test_app!(services(pool), routes());
@@ -180,7 +175,6 @@ async fn test_project_route_patch_project_empty_payload(pool: PgPool) {
     assert!(response.status().is_client_error());
     assert_eq!(response.status(), actix_web::http::StatusCode::BAD_REQUEST);
 }
-
 
 #[sqlx::test]
 async fn test_project_route_patch_project_not_found(pool: PgPool) {
@@ -202,7 +196,6 @@ async fn test_project_route_patch_project_not_found(pool: PgPool) {
     assert_eq!(response.status(), actix_web::http::StatusCode::NOT_FOUND);
 }
 
-
 #[sqlx::test(fixtures("../fixtures/projects.sql"))]
 async fn test_project_route_patch_project_duplicate_name_error(pool: PgPool) {
     let app = create_test_app!(services(pool), routes());
@@ -222,7 +215,6 @@ async fn test_project_route_patch_project_duplicate_name_error(pool: PgPool) {
     assert!(response.status().is_client_error());
     assert_eq!(response.status(), actix_web::http::StatusCode::CONFLICT);
 }
-
 
 #[sqlx::test(fixtures("../fixtures/projects.sql"))]
 async fn test_project_route_delete_project_succeeds(pool: PgPool) {
@@ -302,7 +294,7 @@ async fn test_project_route_list_projects_filter_by_enabled_true(pool: PgPool) {
         .await;
     assert!(response.status().is_success());
     let projects: Vec<Project> = actix_web::test::read_body_json(response).await;
-    assert!(projects.len() > 0);
+    assert!(!projects.is_empty());
     assert!(projects.iter().all(|p| p.enabled));
 }
 
@@ -315,7 +307,7 @@ async fn test_project_route_list_projects_filter_by_enabled_false(pool: PgPool) 
         .await;
     assert!(response.status().is_success());
     let projects: Vec<Project> = actix_web::test::read_body_json(response).await;
-    assert!(projects.len() > 0);
+    assert!(!projects.is_empty());
     assert!(projects.iter().all(|p| !p.enabled));
 }
 
@@ -330,4 +322,3 @@ async fn test_project_route_list_projects_empty(pool: PgPool) {
     let projects: Vec<Project> = actix_web::test::read_body_json(response).await;
     assert_eq!(projects.len(), 0);
 }
-

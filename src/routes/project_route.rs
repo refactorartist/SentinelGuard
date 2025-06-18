@@ -1,11 +1,11 @@
 use crate::models::pagination::Pagination;
-use crate::models::project::{ProjectFilter, ProjectResponse, ProjectSortOrder, ProjectSortableFields};
+use crate::models::project::{
+    ProjectFilter, ProjectResponse, ProjectSortOrder, ProjectSortableFields,
+};
 use crate::models::sort::SortOrder;
 use crate::services::project_service::ProjectService;
 use crate::{
-    models::{
-        project::{ProjectCreatePayload, ProjectUpdatePayload},
-    },
+    models::project::{ProjectCreatePayload, ProjectUpdatePayload},
     services::base::Service,
 };
 use actix_web::{Error, HttpResponse, web};
@@ -74,16 +74,16 @@ pub async fn patch(
     id: web::Path<uuid::Uuid>,
     payload: web::Json<ProjectUpdatePayload>,
 ) -> Result<HttpResponse, Error> {
-    let project = service
-        .update(id.into_inner(), payload.into_inner())
-        .await;
+    let project = service.update(id.into_inner(), payload.into_inner()).await;
 
     if project.is_err() {
         let error_message = project.unwrap_err().to_string();
         match error_message.as_str() {
             "No changes to update" => return Err(actix_web::error::ErrorBadRequest(error_message)),
             "Project not found" => return Err(actix_web::error::ErrorNotFound(error_message)),
-            "Project name already exists" => return Err(actix_web::error::ErrorConflict(error_message)),
+            "Project name already exists" => {
+                return Err(actix_web::error::ErrorConflict(error_message));
+            }
             _ => return Err(actix_web::error::ErrorInternalServerError(error_message)),
         }
     }
@@ -107,9 +107,7 @@ pub async fn delete(
     service: web::Data<ProjectService>,
     id: web::Path<uuid::Uuid>,
 ) -> Result<HttpResponse, Error> {
-    let result = service
-        .delete(id.into_inner())
-        .await;
+    let result = service.delete(id.into_inner()).await;
 
     match result {
         Ok(true) => Ok(HttpResponse::NoContent().finish()),

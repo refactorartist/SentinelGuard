@@ -1,9 +1,9 @@
 use anyhow::{Context, Error, Result};
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD;
-use uuid::Uuid;
 use rand::{RngCore, rngs::OsRng};
 use std::env;
+use uuid::Uuid;
 
 use crate::utils::tokens::hmac::{HmacHashFunction, HmacKey};
 
@@ -152,61 +152,68 @@ mod tests {
 
     #[test]
     fn test_encrypt_decrypt() {
-        temp_env::with_var("SENTINEL_GUARD_MASTER_KEY", Some("test-master-key-12345"), || {
-            // Create a SecretsManager
-            let secrets_manager = SecretsManager::new(false).unwrap();
+        temp_env::with_var(
+            "SENTINEL_GUARD_MASTER_KEY",
+            Some("test-master-key-12345"),
+            || {
+                // Create a SecretsManager
+                let secrets_manager = SecretsManager::new(false).unwrap();
 
-            // Test data
-            let original_text = "This is a secret message";
-            let resource_id = Uuid::new_v4();
+                // Test data
+                let original_text = "This is a secret message";
+                let resource_id = Uuid::new_v4();
 
-            // Encrypt
-            let encrypted = secrets_manager
-                .encrypt(original_text, &resource_id)
-                .unwrap();
+                // Encrypt
+                let encrypted = secrets_manager
+                    .encrypt(original_text, &resource_id)
+                    .unwrap();
 
-            // Decrypt
-            let decrypted = secrets_manager.decrypt(&encrypted, &resource_id).unwrap();
+                // Decrypt
+                let decrypted = secrets_manager.decrypt(&encrypted, &resource_id).unwrap();
 
-            // Verify
-            assert_eq!(original_text, decrypted);
-        });
+                // Verify
+                assert_eq!(original_text, decrypted);
+            },
+        );
     }
 
     #[test]
     fn test_different_resource_ids() {
-        temp_env::with_var("SENTINEL_GUARD_MASTER_KEY", Some("test-master-key-12345"), || {
-            // Create a SecretsManager
-            let secrets_manager = SecretsManager::new(false).unwrap();
+        temp_env::with_var(
+            "SENTINEL_GUARD_MASTER_KEY",
+            Some("test-master-key-12345"),
+            || {
+                // Create a SecretsManager
+                let secrets_manager = SecretsManager::new(false).unwrap();
 
-            // Test data
-            let original_text = "This is a secret message";
-            let resource_id_1 = Uuid::new_v4();
-            let resource_id_2 = Uuid::new_v4();
+                // Test data
+                let original_text = "This is a secret message";
+                let resource_id_1 = Uuid::new_v4();
+                let resource_id_2 = Uuid::new_v4();
 
-            // Encrypt with first resource ID
-            let encrypted = secrets_manager
-                .encrypt(original_text, &resource_id_1)
-                .unwrap();
+                // Encrypt with first resource ID
+                let encrypted = secrets_manager
+                    .encrypt(original_text, &resource_id_1)
+                    .unwrap();
 
-            // Try to decrypt with second resource ID (should fail or produce different output)
-            let result = secrets_manager.decrypt(&encrypted, &resource_id_2);
+                // Try to decrypt with second resource ID (should fail or produce different output)
+                let result = secrets_manager.decrypt(&encrypted, &resource_id_2);
 
-            if let Ok(decrypted) = result {
-                // If decryption succeeded, the result should be different
-                assert_ne!(original_text, decrypted);
-            } else {
-                // Or decryption might fail, which is also acceptable
-                assert!(result.is_err());
-            }
-        });
+                if let Ok(decrypted) = result {
+                    // If decryption succeeded, the result should be different
+                    assert_ne!(original_text, decrypted);
+                } else {
+                    // Or decryption might fail, which is also acceptable
+                    assert!(result.is_err());
+                }
+            },
+        );
     }
 
     #[test]
     fn test_missing_env_var() {
         temp_env::with_var_unset("SENTINEL_GUARD_MASTER_KEY", || {
             let result = SecretsManager::new(false);
-            dbg!(&result);
             assert!(result.is_err());
         });
     }

@@ -1,10 +1,10 @@
 use std::sync::Arc;
 
+use crate::models::pagination::Pagination;
 use crate::models::service_account::{
     ServiceAccount, ServiceAccountCreatePayload, ServiceAccountFilter, ServiceAccountSortOrder,
     ServiceAccountUpdatePayload,
 };
-use crate::models::pagination::Pagination;
 use crate::repositories::base::Repository;
 use crate::utils::security::SecretsManager;
 use anyhow::Error;
@@ -22,7 +22,10 @@ pub struct ServiceAccountRepository {
 
 impl ServiceAccountRepository {
     pub fn new(pool: Arc<sqlx::postgres::PgPool>) -> Self {
-        Self { pool, secrets_manager: SecretsManager::new(true).unwrap() }
+        Self {
+            pool,
+            secrets_manager: SecretsManager::new(true).unwrap(),
+        }
     }
 }
 
@@ -46,7 +49,7 @@ impl Repository<ServiceAccount> for ServiceAccountRepository {
             updated_at: Utc::now(),
         };
 
-        let created_service_account = sqlx::query_as!(
+        let result = sqlx::query_as!(
             ServiceAccount,
             r#"
             INSERT INTO service_account (id, name, email, secret, description, enabled) 
@@ -61,16 +64,31 @@ impl Repository<ServiceAccount> for ServiceAccountRepository {
             service_account.enabled,
         )
         .fetch_one(&*self.pool)
-        .await
-        .map_err(<sqlx::Error as Into<Error>>::into);
+        .await;
 
-        if created_service_account.is_err() {
-            return Err(Error::msg(
-                "Failed to create service account: ".to_owned() + &created_service_account.unwrap_err().to_string(),
-            ));
-        }
+        match result {
+            Ok(service_account) => Ok(service_account),
+            Err(error) => match error {
+                sqlx::Error::RowNotFound => Err(Error::msg("Service account not found")),
+                sqlx::Error::Database(e) => {
+                    let error_message = e.message();
 
-        Ok(created_service_account.unwrap())
+                    match error_message {
+                        s if s.contains("unique constraint") || s.contains("duplicate key") => {
+                            if s.contains("idx_service_account_name") {
+                                Err(Error::msg("Service account name already exists"))
+                            } else if s.contains("idx_service_account_email") {
+                                Err(Error::msg("Service account email already exists"))
+                            } else {
+                                Err(Error::msg("No changes were made"))
+                            }
+                        }
+                        _ => Err(Error::msg("No changes were made")),
+                    }
+                }
+                _ => Err(error.into()),
+            },
+        }    
     }
 
     async fn read(&self, id: Uuid) -> Result<Option<ServiceAccount>, Error> {
@@ -93,7 +111,6 @@ impl Repository<ServiceAccount> for ServiceAccountRepository {
 
         Ok(service_account)
     }
-
 
     async fn update(&self, id: Uuid, update: Self::UpdatePayload) -> Result<ServiceAccount, Error> {
         let mut changes = Vec::new();
@@ -141,7 +158,9 @@ impl Repository<ServiceAccount> for ServiceAccountRepository {
 
         query.push(", updated_at = ").push_bind(Utc::now());
         query.push(" WHERE id = ").push_bind(id);
-        query.push(" RETURNING id, name, email, secret, description, enabled, created_at, updated_at");
+        query.push(
+            " RETURNING id, name, email, secret, description, enabled, created_at, updated_at",
+        );
 
         let result = query
             .build()
@@ -158,6 +177,7 @@ impl Repository<ServiceAccount> for ServiceAccountRepository {
                 updated_at: row.get("updated_at"),
             });
 
+
         match result {
             Ok(service_account) => Ok(service_account),
             Err(error) => match error {
@@ -168,9 +188,9 @@ impl Repository<ServiceAccount> for ServiceAccountRepository {
                     match error_message {
                         s if s.contains("unique constraint") || s.contains("duplicate key") => {
                             if s.contains("idx_service_account_name") {
-                                Err(Error::msg("Service account with this name already exists"))
+                                Err(Error::msg("Service account name already exists"))
                             } else if s.contains("idx_service_account_email") {
-                                Err(Error::msg("Service account with this email already exists"))
+                                Err(Error::msg("Service account email already exists"))
                             } else {
                                 Err(Error::msg("No changes were made"))
                             }
