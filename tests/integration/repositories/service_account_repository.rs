@@ -63,11 +63,7 @@ async fn test_service_account_repository_create_with_duplicate_name_fails(pool: 
     assert!(result.is_err());
     let error_message = result.unwrap_err().to_string();
 
-    dbg!(&error_message);
-
-    assert!(error_message.contains("Failed to create service account"));
-    assert!(error_message.contains("idx_service_account_name"));
-    assert!(error_message.contains("duplicate key"));
+    assert!(error_message.contains("Service account name already exists"));
 }
 
 #[sqlx::test]
@@ -92,11 +88,7 @@ async fn test_service_account_repository_create_with_duplicate_email_fails(pool:
     assert!(result.is_err());
     let error_message = result.unwrap_err().to_string();
 
-    dbg!(&error_message);
-
-    assert!(error_message.contains("Failed to create service account"));
-    assert!(error_message.contains("idx_service_account_email"));
-    assert!(error_message.contains("duplicate key"));
+    assert!(error_message.contains("Service account email already exists"));
 }
 
 #[sqlx::test(fixtures("../fixtures/service_accounts.sql"))]
@@ -220,7 +212,7 @@ async fn test_service_account_repository_update_duplicate_name_fails(pool: PgPoo
     assert!(result.is_err());
     let error_message = result.unwrap_err().to_string();
 
-    assert!(error_message.contains("Service account with this name already exists"));
+    assert!(error_message.contains("Service account name already exists"));
 }
 
 #[sqlx::test(fixtures("../fixtures/service_accounts.sql"))]
@@ -245,7 +237,7 @@ async fn test_service_account_repository_update_duplicate_email_fails(pool: PgPo
     assert!(result.is_err());
     let error_message = result.unwrap_err().to_string();
 
-    assert!(error_message.contains("Service account with this email already exists"));
+    assert!(error_message.contains("Service account email already exists"));
 }
 
 #[sqlx::test(fixtures("../fixtures/service_accounts.sql"))]
