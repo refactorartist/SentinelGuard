@@ -47,8 +47,6 @@ async fn test_project_repository_create_project_with_duplicate_name_fails(pool: 
     // Add another record with the same name
     let project = project_repository.create(payload.clone()).await;
 
-    dbg!(&project);
-
     assert!(project.is_err());
 }
 

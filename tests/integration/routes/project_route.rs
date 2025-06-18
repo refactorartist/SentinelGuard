@@ -9,8 +9,6 @@ use sentinel_guard::{
     services::project_service::ProjectService,
 };
 
-include!("../../commons/macros.rs");
-
 fn services(pool: PgPool) -> Vec<ProjectService> {
     vec![ProjectService::new(ProjectRepository::new(Arc::new(pool)))]
 }
@@ -18,6 +16,8 @@ fn services(pool: PgPool) -> Vec<ProjectService> {
 fn routes() -> Vec<fn(&mut actix_web::web::ServiceConfig)> {
     vec![project_route::configure_routes]
 }
+
+use crate::create_test_app;
 
 #[sqlx::test]
 async fn test_project_route_create_project_with_valid_data_succeeds(pool: PgPool) {
@@ -133,10 +133,6 @@ async fn test_project_route_patch_project_description_succeeds(pool: PgPool) {
         .await;
 
     let (_request, response) = response.into_parts();
-
-    let body = response.body();
-
-    dbg!(&body);
 
     assert!(response.status().is_success());
 }

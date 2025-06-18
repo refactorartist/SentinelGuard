@@ -214,7 +214,6 @@ mod tests {
     fn test_missing_env_var() {
         temp_env::with_var_unset("SENTINEL_GUARD_MASTER_KEY", || {
             let result = SecretsManager::new(false);
-            dbg!(&result);
             assert!(result.is_err());
         });
     }
