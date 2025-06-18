@@ -72,6 +72,7 @@ impl Repository<ProjectScope> for ProjectScopeRepository {
                                 Err(Error::msg("No changes were made"))
                             }
                         }
+                        s if s.contains("foreign key") && s.contains("project_scopes_project_id_fkey") => Err(Error::msg("Project not found")),
                         _ => Err(Error::msg("No changes were made")),
                     }
                 }
