@@ -85,11 +85,11 @@ impl Repository<ProjectScope> for ProjectScopeRepository {
         }
     }
 
-    async fn read(&self, _id: Uuid) -> Result<Option<ProjectScope>, Error> {
+    async fn read(&self, id: Uuid) -> Result<Option<ProjectScope>, Error> {
         let project_scope = sqlx::query_as!(
             ProjectScope,
             "SELECT * FROM project_scopes WHERE id = $1 LIMIT 1",
-            _id,
+            id,
         )
         .fetch_optional(&*self.pool)
         .await
