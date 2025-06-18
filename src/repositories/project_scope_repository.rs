@@ -2,6 +2,7 @@ use std::sync::Arc;
 
 use anyhow::Error;
 use async_trait::async_trait;
+use chrono::Utc;
 use sqlx;
 use uuid::Uuid;
 
@@ -35,26 +36,67 @@ impl Repository<ProjectScope> for ProjectScopeRepository {
     type Sort = ProjectScopeSortOrder;
 
     async fn create(&self, item: Self::CreatePayload) -> Result<ProjectScope, Error> {
+        let project_scope = ProjectScope {
+            id: None,
+            project_id: item.project_id.parse().unwrap(),
+            scope: item.scope,
+            description: item.description,
+            enabled: item.enabled,
+            created_at: Utc::now(),
+            updated_at: Utc::now(),
+        };
+
+        let created_project_scope = sqlx::query_as!(
+            ProjectScope,
+            "INSERT INTO project_scopes (project_id, scope, description, enabled) VALUES ($1, $2, $3, $4) RETURNING id, project_id, scope, description, enabled, created_at, updated_at",
+            project_scope.project_id,
+            project_scope.scope,
+            project_scope.description,
+            project_scope.enabled,
+        )
+        .fetch_one(&*self.pool)
+        .await;
+
+        match created_project_scope {
+            Ok(project_scope) => Ok(project_scope),
+            Err(error) => match error {
+                sqlx::Error::RowNotFound => Err(Error::msg("Project scope not found")),
+                sqlx::Error::Database(e) => {
+                    let error_message = e.message();
+
+                    match error_message {
+                        s if s.contains("unique constraint") || s.contains("duplicate key") => {
+                            if s.contains("idx_project_scopes_project_id_scope") {
+                                Err(Error::msg("Project Id, scope combination already exists"))
+                            } else {
+                                Err(Error::msg("No changes were made"))
+                            }
+                        }
+                        _ => Err(Error::msg("No changes were made")),
+                    }
+                }
+                _ => Err(error.into()),
+            },
+        }
+    }
+
+    async fn read(&self, _id: Uuid) -> Result<Option<ProjectScope>, Error> {
         todo!()
     }
 
-    async fn read(&self, id: Uuid) -> Result<Option<ProjectScope>, Error> {
+    async fn update(&self, _id: Uuid, _update: Self::UpdatePayload) -> Result<ProjectScope, Error> {
         todo!()
     }
 
-    async fn update(&self, id: Uuid, update: Self::UpdatePayload) -> Result<ProjectScope, Error> {
-        todo!()
-    }
-
-    async fn delete(&self, id: Uuid) -> Result<bool, Error> {
+    async fn delete(&self, _id: Uuid) -> Result<bool, Error> {
         todo!()
     }
 
     async fn find(
         &self,
-        filter: Self::Filter,
-        sort: Option<Vec<Self::Sort>>,
-        pagination: Option<Pagination>,
+        _filter: Self::Filter,
+        _sort: Option<Vec<Self::Sort>>,
+        _pagination: Option<Pagination>,
     ) -> Result<Vec<ProjectScope>, Error> {
         todo!()
     }
