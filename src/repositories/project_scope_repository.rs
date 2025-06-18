@@ -82,7 +82,20 @@ impl Repository<ProjectScope> for ProjectScopeRepository {
     }
 
     async fn read(&self, _id: Uuid) -> Result<Option<ProjectScope>, Error> {
-        todo!()
+        let project_scope = sqlx::query_as!(
+            ProjectScope,
+            "SELECT * FROM project_scopes WHERE id = $1 LIMIT 1",
+            _id,
+        )
+        .fetch_optional(&*self.pool)
+        .await
+        .map_err(<sqlx::Error as Into<Error>>::into)?;
+
+        if project_scope.is_none() {
+            return Err(Error::msg("Project scope not found"));
+        }
+
+        Ok(project_scope)
     }
 
     async fn update(&self, _id: Uuid, _update: Self::UpdatePayload) -> Result<ProjectScope, Error> {

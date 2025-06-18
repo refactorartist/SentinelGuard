@@ -60,3 +60,31 @@ async fn test_project_scope_repository_create_with_duplicate_project_id_scope_fa
     assert_eq!(error_message, "Project Id, scope combination already exists");
 }
 
+#[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/project_scopes.sql"))]
+async fn test_project_scope_repository_read_existing_account_succeeds(pool: PgPool) {
+    let repository = ProjectScopeRepository::new(Arc::new(pool));
+
+    let project_id = Uuid::parse_str("00000000-0000-0000-0000-000000000001").unwrap();
+
+    let project_scope = repository.read(project_id).await.unwrap();
+
+    assert!(project_scope.is_some());
+    let project_scope = project_scope.unwrap();
+    assert_eq!(project_scope.project_id, Uuid::parse_str("123e4567-e89b-12d3-a456-426614174000").unwrap());
+    assert_eq!(project_scope.scope, "testa:read");
+    assert_eq!(project_scope.description, "Read access to testa project");
+    assert!(project_scope.enabled);
+}
+
+#[sqlx::test]
+async fn test_project_scope_repository_read_nonexistent_account_returns_error(pool: PgPool) {
+    let repository = ProjectScopeRepository::new(Arc::new(pool));
+
+    let project_id = Uuid::parse_str("00000000-0000-0000-0000-000000000002").unwrap();
+
+    let project_scope = repository.read(project_id).await;
+
+    assert!(project_scope.is_err());
+    let error_message = project_scope.unwrap_err().to_string();
+    assert_eq!(error_message, "Project scope not found");
+}
