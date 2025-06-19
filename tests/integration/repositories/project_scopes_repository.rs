@@ -184,3 +184,28 @@ async fn test_project_scope_repository_update_scope_duplicated_fails(pool: PgPoo
     let error_message = project_scope.unwrap_err().to_string();
     assert_eq!(error_message, "Project Id, scope combination already exists");
 }
+
+#[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/project_scopes.sql"))]
+async fn test_project_scope_delete_existing_scope_succeeds(pool: PgPool) {
+    let repository = ProjectScopeRepository::new(Arc::new(pool));
+
+    let project_id = Uuid::parse_str("00000000-0000-0000-0000-000000000001").unwrap();
+
+    let project_scope = repository.delete(project_id).await.unwrap();
+
+    assert!(project_scope);
+}
+
+
+#[sqlx::test]
+async fn test_project_scope_delete_nonexisting_scope_fails(pool: PgPool) {
+    let repository = ProjectScopeRepository::new(Arc::new(pool));
+
+    let project_id = Uuid::parse_str("00000000-0000-0000-0000-000000000001").unwrap();
+
+    let project_scope = repository.delete(project_id).await;
+
+    assert!(project_scope.is_err());
+    let error_message = project_scope.unwrap_err().to_string();
+    assert_eq!(error_message, "Project scope not found");
+}

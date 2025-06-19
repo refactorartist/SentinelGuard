@@ -183,8 +183,20 @@ impl Repository<ProjectScope> for ProjectScopeRepository {
         }
     }
 
-    async fn delete(&self, _id: Uuid) -> Result<bool, Error> {
-        todo!()
+    async fn delete(&self, id: Uuid) -> Result<bool, Error> {
+        let deleted = sqlx::query!(
+            "DELETE FROM project_scopes WHERE id = $1 RETURNING id",
+            id,
+        )
+        .fetch_optional(&*self.pool)
+        .await
+        .map_err(<sqlx::Error as Into<Error>>::into)?;
+
+        if deleted.is_none() {
+            return Err(Error::msg("Project scope not found"));
+        }
+
+        Ok(true)
     }
 
     async fn find(
