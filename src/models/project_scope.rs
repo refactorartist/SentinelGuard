@@ -64,7 +64,6 @@ pub struct ProjectScopeCreatePayload {
 
 #[derive(Debug, Serialize, Deserialize, Clone, ToSchema)]
 pub struct ProjectScopeUpdatePayload {
-    pub project_id: String,
     pub scope: Option<String>,
     pub description: Option<String>,
     pub enabled: Option<bool>,
