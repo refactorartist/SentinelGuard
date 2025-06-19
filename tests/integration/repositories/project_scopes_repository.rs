@@ -134,7 +134,7 @@ async fn test_project_scope_repository_update_description_succeeds(pool: PgPool)
 }
 
 #[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/project_scopes.sql"))]
-async fn test_project_scope_repository_update_enabled_succeeds(pool: PgPool) {
+async fn test_project_scope_repository_update_enabled_to_false_succeeds(pool: PgPool) {
     let repository = ProjectScopeRepository::new(Arc::new(pool));
 
     let project_id = Uuid::parse_str("00000000-0000-0000-0000-000000000001").unwrap();
@@ -147,4 +147,40 @@ async fn test_project_scope_repository_update_enabled_succeeds(pool: PgPool) {
     let project_scope = repository.update(project_id, update).await.unwrap();
 
     assert!(!project_scope.enabled);
+}
+
+
+#[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/project_scopes.sql"))]
+async fn test_project_scope_repository_update_enabled_to_true_succeeds(pool: PgPool) {
+    let repository = ProjectScopeRepository::new(Arc::new(pool));
+
+    let project_id = Uuid::parse_str("00000000-0000-0000-0000-000000000023").unwrap();
+    let update = ProjectScopeUpdatePayload {
+        scope: None,
+        description: None,
+        enabled: Some(true),
+    };
+
+    let project_scope = repository.update(project_id, update).await.unwrap();
+
+    assert!(project_scope.enabled);
+}
+
+
+#[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/project_scopes.sql"))]
+async fn test_project_scope_repository_update_scope_duplicated_fails(pool: PgPool) {
+    let repository = ProjectScopeRepository::new(Arc::new(pool));
+
+    let project_id = Uuid::parse_str("00000000-0000-0000-0000-000000000001").unwrap();
+    let update = ProjectScopeUpdatePayload {
+        scope: Some("testa:write".to_string()),
+        description: None,
+        enabled: None,
+    };
+
+    let project_scope = repository.update(project_id, update).await;
+
+    assert!(project_scope.is_err());
+    let error_message = project_scope.unwrap_err().to_string();
+    assert_eq!(error_message, "Project Id, scope combination already exists");
 }
