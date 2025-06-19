@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use sentinel_guard::{
-    models::project_scope::ProjectScopeCreatePayload,
+    models::project_scope::{ProjectScopeCreatePayload, ProjectScopeUpdatePayload},
     repositories::{base::Repository, project_scope_repository::ProjectScopeRepository},
 };
 use sqlx::PgPool;
@@ -98,4 +98,53 @@ async fn test_project_scope_repository_read_nonexistent_account_returns_error(po
     assert!(project_scope.is_err());
     let error_message = project_scope.unwrap_err().to_string();
     assert_eq!(error_message, "Project scope not found");
+}
+
+#[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/project_scopes.sql"))]
+async fn test_project_scope_repository_update_scope_succeeds(pool: PgPool) {
+    let repository = ProjectScopeRepository::new(Arc::new(pool));
+
+    let project_id = Uuid::parse_str("00000000-0000-0000-0000-000000000001").unwrap();
+    let update = ProjectScopeUpdatePayload {
+        scope: Some("testa:changes-made".to_string()),
+        description: None,
+        enabled: None,
+    };
+
+    let project_scope = repository.update(project_id, update).await.unwrap();
+
+    assert_eq!(project_scope.scope, "testa:changes-made");
+}
+
+
+#[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/project_scopes.sql"))]
+async fn test_project_scope_repository_update_description_succeeds(pool: PgPool) {
+    let repository = ProjectScopeRepository::new(Arc::new(pool));
+
+    let project_id = Uuid::parse_str("00000000-0000-0000-0000-000000000001").unwrap();
+    let update = ProjectScopeUpdatePayload {
+        scope: None,
+        description: Some("some changes to make".to_string()),
+        enabled: None,
+    };
+
+    let project_scope = repository.update(project_id, update).await.unwrap();
+
+    assert_eq!(project_scope.description, "some changes to make");
+}
+
+#[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/project_scopes.sql"))]
+async fn test_project_scope_repository_update_enabled_succeeds(pool: PgPool) {
+    let repository = ProjectScopeRepository::new(Arc::new(pool));
+
+    let project_id = Uuid::parse_str("00000000-0000-0000-0000-000000000001").unwrap();
+    let update = ProjectScopeUpdatePayload {
+        scope: None,
+        description: None,
+        enabled: Some(false),
+    };
+
+    let project_scope = repository.update(project_id, update).await.unwrap();
+
+    assert!(!project_scope.enabled);
 }
