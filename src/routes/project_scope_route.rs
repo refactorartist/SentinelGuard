@@ -48,10 +48,9 @@ pub async fn get(
     let project_scope = service
         .read(id.into_inner())
         .await
-        .map_err(actix_web::error::ErrorInternalServerError)?
-        .ok_or_else(|| actix_web::error::ErrorNotFound("Project scope not found"))?;
+        .map_err(actix_web::error::ErrorNotFound)?;
     
-    Ok(HttpResponse::Ok().json(ProjectScopeResponse::from(project_scope)))
+    Ok(HttpResponse::Ok().json(project_scope))
 }
 
 #[utoipa::path(
