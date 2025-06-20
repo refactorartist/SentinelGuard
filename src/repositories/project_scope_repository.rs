@@ -201,10 +201,82 @@ impl Repository<ProjectScope> for ProjectScopeRepository {
 
     async fn find(
         &self,
-        _filter: Self::Filter,
-        _sort: Option<Vec<Self::Sort>>,
-        _pagination: Option<Pagination>,
+        filter: Self::Filter,
+        sort: Option<Vec<Self::Sort>>,
+        pagination: Option<Pagination>,
     ) -> Result<Vec<ProjectScope>, Error> {
-        todo!()
+        let mut query = QueryBuilder::new(
+            "SELECT id, project_id, scope, description, enabled, created_at, updated_at FROM project_scopes ",
+        );
+
+        let mut conditions_list = Vec::new();
+
+        if let Some(project_id) = filter.project_id {
+            conditions_list.push(("project_id = ", format!("{}", project_id)));
+        }
+
+        if let Some(scope) = filter.scope {
+            conditions_list.push(("scope ILIKE ", format!("%{}%", scope)));
+        }
+
+        if let Some(description) = filter.description {
+            conditions_list.push(("description ILIKE ", format!("%{}%", description)));
+        }
+
+        if let Some(enabled) = filter.enabled {
+            match enabled {
+                true => conditions_list.push(("enabled = true", "".to_string())),
+                false => conditions_list.push(("enabled = false", "".to_string())),
+            }
+        }
+
+        if !conditions_list.is_empty() {
+            query.push("WHERE ");
+            let mut conditions = query.separated(" AND ");
+            for (condition, value) in conditions_list {
+                if value.is_empty() {
+                    conditions.push(condition);
+                } else {
+                    conditions.push(condition).push_bind_unseparated(value);
+                }
+            }
+        }
+
+        if let Some(sort) = sort {
+            query.push(" ORDER BY ");
+            let mut order_by = query.separated(", ");
+            for sort in sort {
+                let field = String::from(sort.field);
+                order_by.push(format!("{} {}", field, sort.order));
+            }
+        }
+
+        if let Some(pagination) = pagination {
+            query
+                .push(" LIMIT ")
+                .push_bind(pagination.limit.unwrap_or(10));
+            query
+                .push(" OFFSET ")
+                .push_bind(pagination.offset.unwrap_or(0));
+        }
+
+
+
+        let project_scopes = query.build().fetch_all(&*self.pool).await.map_err(
+            <sqlx::Error as Into<Error>>::into
+        )?
+        .into_iter()
+        .map(|row| ProjectScope {
+            id: row.get("id"),
+            project_id: row.get("project_id"),
+            scope: row.get("scope"),
+            description: row.get("description"),
+            enabled: row.get("enabled"),
+            created_at: row.get("created_at"),
+            updated_at: row.get("updated_at"),
+        })
+        .collect();
+
+        Ok(project_scopes)
     }
 }

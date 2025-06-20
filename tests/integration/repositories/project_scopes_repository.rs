@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use sentinel_guard::{
-    models::project_scope::{ProjectScopeCreatePayload, ProjectScopeUpdatePayload},
+    models::{pagination::Pagination, project_scope::{ProjectScopeCreatePayload, ProjectScopeFilter, ProjectScopeUpdatePayload}},
     repositories::{base::Repository, project_scope_repository::ProjectScopeRepository},
 };
 use sqlx::PgPool;
@@ -208,4 +208,53 @@ async fn test_project_scope_delete_nonexisting_scope_fails(pool: PgPool) {
     assert!(project_scope.is_err());
     let error_message = project_scope.unwrap_err().to_string();
     assert_eq!(error_message, "Project scope not found");
+}
+
+
+#[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/project_scopes.sql"))]
+async fn test_project_scope_find_with_limit_pagination(pool: PgPool) {
+    let repository = ProjectScopeRepository::new(Arc::new(pool));
+
+    let filter = ProjectScopeFilter::default();
+    let sort = None;
+    let pagination = Some(Pagination {
+        limit: Some(2),
+        offset: None,
+    });
+
+    let project_scopes = repository.find(filter, sort, pagination).await.unwrap();
+
+    assert_eq!(project_scopes.len(), 2);
+}
+
+#[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/project_scopes.sql"))]
+async fn test_project_scope_find_with_offset_pagination(pool: PgPool) {
+    let repository = ProjectScopeRepository::new(Arc::new(pool));
+
+    let filter = ProjectScopeFilter::default();
+    let sort = None;
+    let pagination = Some(Pagination {
+        limit: None,
+        offset: Some(1),
+    });
+
+    let project_scopes = repository.find(filter, sort, pagination).await.unwrap();
+
+    assert_eq!(project_scopes.len(), 10);
+}
+
+#[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/project_scopes.sql"))]
+async fn test_project_scope_find_with_limit_offset_pagination(pool: PgPool) {
+    let repository = ProjectScopeRepository::new(Arc::new(pool));
+
+    let filter = ProjectScopeFilter::default();
+    let sort = None;
+    let pagination = Some(Pagination {
+        limit: Some(2),
+        offset: Some(1),
+    });
+
+    let project_scopes = repository.find(filter, sort, pagination).await.unwrap();
+
+    assert_eq!(project_scopes.len(), 2);
 }
