@@ -1,6 +1,9 @@
-use actix_web::{App, HttpServer, web};
+use actix_web::{HttpServer, web};
 use sentinel_guard::repositories::project_repository::ProjectRepository;
+use sentinel_guard::repositories::project_scope_repository::ProjectScopeRepository;
 use sentinel_guard::repositories::service_account_repository::ServiceAccountRepository;
+use sentinel_guard::routes::{service_account_route};
+use sentinel_guard::services::project_scope_service::ProjectScopeService;
 use sentinel_guard::services::project_service::ProjectService;
 use sentinel_guard::services::service_account_service::ServiceAccountService;
 use sentinel_guard::{config::AppConfig, routes::project_route};
@@ -10,6 +13,7 @@ use tokio::signal;
 use utoipa::OpenApi;
 
 use utoipa_swagger_ui::SwaggerUi;
+
 
 #[actix_web::main]
 async fn main() -> Result<(), anyhow::Error> {
@@ -21,6 +25,11 @@ async fn main() -> Result<(), anyhow::Error> {
             project_route::patch,
             project_route::delete,
             project_route::list,
+            service_account_route::post,
+            service_account_route::get,
+            service_account_route::patch,
+            service_account_route::delete,
+            service_account_route::list,
         ),
         tags(
             (name = "SentinelGuard", description = "SentinelGuard API documentation.")
@@ -35,18 +44,19 @@ async fn main() -> Result<(), anyhow::Error> {
     let project_service = ProjectService::new(ProjectRepository::new(pool.clone()));
     let service_account_service =
         ServiceAccountService::new(ServiceAccountRepository::new(pool.clone()));
+    let project_scope_service =
+        ProjectScopeService::new(ProjectScopeRepository::new(pool.clone()));
 
     let host = config.host;
     let port = config.port;
-
     let server = HttpServer::new(move || {
-        App::new()
-            .service(
-                SwaggerUi::new("/docs/{_:.*}").url("/api-docs/openapi.json", ApiDoc::openapi()),
-            )
+        actix_web::App::new()
             .app_data(web::Data::new(project_service.clone()))
             .app_data(web::Data::new(service_account_service.clone()))
+            .app_data(web::Data::new(project_scope_service.clone()))
             .configure(project_route::configure_routes)
+            .configure(service_account_route::configure_routes)
+            .service(SwaggerUi::new("/docs/{_:.*}").url("/api-docs/openapi.json", ApiDoc::openapi()))
     })
     .bind((host.clone(), port))?
     .shutdown_timeout(30) // 30 seconds graceful shutdown timeout
