@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use sentinel_guard::{models::project_scope::ProjectScopeCreatePayload, repositories::project_scope_repository::ProjectScopeRepository, routes::project_scope_route, services::project_scope_service::ProjectScopeService};
+use sentinel_guard::{models::project_scope::{ProjectScopeCreatePayload, ProjectScopeUpdatePayload}, repositories::project_scope_repository::ProjectScopeRepository, routes::project_scope_route, services::project_scope_service::ProjectScopeService};
 use sqlx::PgPool;
 
 use crate::{create_test_app};
@@ -57,7 +57,6 @@ async fn test_project_scope_route_create_project_scope_with_duplicate_project_id
     assert_eq!(response.status(), actix_web::http::StatusCode::BAD_REQUEST);
 }
 
-// Create test for read project scope by id successful 
 #[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/project_scopes.sql"))]
 async fn test_project_scope_route_read_project_scope_by_id_successful(pool: PgPool) {
     let app = create_test_app!(services(pool), routes());
@@ -71,7 +70,6 @@ async fn test_project_scope_route_read_project_scope_by_id_successful(pool: PgPo
 }
 
 
-// Create test for read project scope by id failure when project scope not found 
 #[sqlx::test]
 async fn test_project_scope_route_read_project_scope_by_id_not_found(pool: PgPool) {
     let app = create_test_app!(services(pool), routes());
@@ -85,3 +83,83 @@ async fn test_project_scope_route_read_project_scope_by_id_not_found(pool: PgPoo
     assert_eq!(response.status(), actix_web::http::StatusCode::NOT_FOUND);
 }
 
+
+#[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/project_scopes.sql"))]
+async fn test_project_scope_route_patch_scope_successful(pool: PgPool) {
+    let app = create_test_app!(services(pool), routes());
+
+    let payload = ProjectScopeUpdatePayload {
+        scope: Some("test:changes-made".to_string()),
+        description: None,
+        enabled: None,
+    };
+
+    let response = actix_web::test::TestRequest::patch()
+        .uri("/project-scopes/00000000-0000-0000-0000-000000000001")
+        .set_json(&payload)
+        .send_request(&app)
+        .await;
+
+    assert!(response.status().is_success());
+}
+
+
+
+#[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/project_scopes.sql"))]
+async fn test_project_scope_route_patch_description_successful(pool: PgPool) {
+    let app = create_test_app!(services(pool), routes());
+
+    let payload = ProjectScopeUpdatePayload {
+        scope: None,
+        description: Some("test:changes-made".to_string()),
+        enabled: None,
+    };
+
+    let response = actix_web::test::TestRequest::patch()
+        .uri("/project-scopes/00000000-0000-0000-0000-000000000001")
+        .set_json(&payload)
+        .send_request(&app)
+        .await;
+
+    assert!(response.status().is_success());
+}
+
+
+#[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/project_scopes.sql"))]
+async fn test_project_scope_route_patch_enabled_true_successful(pool: PgPool) {
+    let app = create_test_app!(services(pool), routes());
+
+    let payload = ProjectScopeUpdatePayload {
+        scope: None,
+        description: None,
+        enabled: Some(true),
+    };
+
+    let response = actix_web::test::TestRequest::patch()
+        .uri("/project-scopes/00000000-0000-0000-0000-000000000011")
+        .set_json(&payload)
+        .send_request(&app)
+        .await;
+
+    assert!(response.status().is_success());
+}
+
+
+#[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/project_scopes.sql"))]
+async fn test_project_scope_route_patch_enabled_false_successful(pool: PgPool) {
+    let app = create_test_app!(services(pool), routes());
+
+    let payload = ProjectScopeUpdatePayload {
+        scope: None,
+        description: None,
+        enabled: Some(false),
+    };
+
+    let response = actix_web::test::TestRequest::patch()
+        .uri("/project-scopes/00000000-0000-0000-0000-000000000001")
+        .set_json(&payload)
+        .send_request(&app)
+        .await;
+
+    assert!(response.status().is_success());
+}
