@@ -18,7 +18,7 @@ INSERT INTO project_scopes (id, project_id, scope, description, enabled, created
 -- Project scopes for something1 project
 INSERT INTO project_scopes (id, project_id, scope, description, enabled, created_at, updated_at) VALUES
 ('00000000-0000-0000-0000-000000000031', '123e4567-e89b-12d3-a456-426614173001', 'something1:read', 'Read access to something1 project', true, NOW(), NOW()),
-('00000000-0000-0000-0000-000000000032', '123e4567-e89b-12d3-a456-426614173001', 'something1:write', 'Write access to something1 project', true, NOW(), NOW()),
+('00000000-0000-0000-0000-000000000032', '123e4567-e89b-12d3-a456-426614173001', 'something1:write', 'Write access to something1 project', false, NOW(), NOW()),
 ('00000000-0000-0000-0000-000000000033', '123e4567-e89b-12d3-a456-426614173001', 'something1:admin', 'Admin access to something1 project', true, NOW(), NOW());
 
 -- Additional scopes for testa project with different patterns

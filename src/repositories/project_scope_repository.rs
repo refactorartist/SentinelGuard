@@ -209,11 +209,9 @@ impl Repository<ProjectScope> for ProjectScopeRepository {
             "SELECT id, project_id, scope, description, enabled, created_at, updated_at FROM project_scopes ",
         );
 
-        let mut conditions_list = Vec::new();
+        
 
-        if let Some(project_id) = filter.project_id {
-            conditions_list.push(("project_id = ", format!("{}", project_id)));
-        }
+        let mut conditions_list = Vec::new();
 
         if let Some(scope) = filter.scope {
             conditions_list.push(("scope ILIKE ", format!("%{}%", scope)));
@@ -230,16 +228,27 @@ impl Repository<ProjectScope> for ProjectScopeRepository {
             }
         }
 
-        if !conditions_list.is_empty() {
+        if !&conditions_list.is_empty() {
             query.push("WHERE ");
             let mut conditions = query.separated(" AND ");
-            for (condition, value) in conditions_list {
+            for (condition, value) in &conditions_list {
                 if value.is_empty() {
                     conditions.push(condition);
                 } else {
                     conditions.push(condition).push_bind_unseparated(value);
                 }
             }
+        }
+
+        if let Some(project_id) = filter.project_id {
+            if conditions_list.is_empty() {
+                query.push("WHERE ");
+            } else {
+                query.push(" AND ");
+            }
+            let project_id = uuid::Uuid::parse_str(&project_id).unwrap();
+
+            query.push(" project_id = ").push_bind(project_id);
         }
 
         if let Some(sort) = sort {
@@ -259,8 +268,6 @@ impl Repository<ProjectScope> for ProjectScopeRepository {
                 .push(" OFFSET ")
                 .push_bind(pagination.offset.unwrap_or(0));
         }
-
-
 
         let project_scopes = query.build().fetch_all(&*self.pool).await.map_err(
             <sqlx::Error as Into<Error>>::into

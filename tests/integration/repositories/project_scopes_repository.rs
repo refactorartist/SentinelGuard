@@ -258,3 +258,88 @@ async fn test_project_scope_find_with_limit_offset_pagination(pool: PgPool) {
 
     assert_eq!(project_scopes.len(), 2);
 }
+
+
+#[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/project_scopes.sql"))]
+async fn test_project_scope_find_with_project_id_filter(pool: PgPool) {
+    let repository = ProjectScopeRepository::new(Arc::new(pool));
+
+    let filter = ProjectScopeFilter {
+        project_id: Some("123e4567-e89b-12d3-a456-426614174000".to_string()),
+        ..Default::default()
+    };
+    let sort = None;
+    let pagination = None;
+
+    let project_scopes = repository.find(filter, sort, pagination).await.unwrap();
+
+    assert_eq!(project_scopes.len(), 6);
+}
+
+
+#[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/project_scopes.sql"))]
+async fn test_project_scope_find_with_scope_filter(pool: PgPool) {
+    let repository = ProjectScopeRepository::new(Arc::new(pool));
+
+    let filter = ProjectScopeFilter {
+        scope: Some("testa:read".to_string()),
+        ..Default::default()
+    };
+    let sort = None;
+    let pagination = None;
+
+    let project_scopes = repository.find(filter, sort, pagination).await.unwrap();
+
+    assert_eq!(project_scopes.len(), 1);
+}
+
+
+#[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/project_scopes.sql"))]
+async fn test_project_scope_find_with_description_filter(pool: PgPool) {
+    let repository = ProjectScopeRepository::new(Arc::new(pool));
+
+    let filter = ProjectScopeFilter {
+        description: Some("Read access".to_string()),
+        ..Default::default()
+    };
+    let sort = None;
+    let pagination = None;
+
+    let project_scopes = repository.find(filter, sort, pagination).await.unwrap();
+
+    assert_eq!(project_scopes.len(), 6);
+}
+
+// TODO: Add tests for find with enabled filter 
+#[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/project_scopes.sql"))]
+async fn test_project_scope_find_with_enabled_is_true_filter(pool: PgPool) {
+    let repository = ProjectScopeRepository::new(Arc::new(pool));
+
+    let filter = ProjectScopeFilter {
+        enabled: Some(true),
+        ..Default::default()
+    };
+    let sort = None;
+    let pagination = None;
+
+    let project_scopes = repository.find(filter, sort, pagination).await.unwrap();
+
+    assert_eq!(project_scopes.len(), 10);
+}
+
+
+#[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/project_scopes.sql"))]
+async fn test_project_scope_find_with_enabled_is_false_filter(pool: PgPool) {
+    let repository = ProjectScopeRepository::new(Arc::new(pool));
+
+    let filter = ProjectScopeFilter {
+        enabled: Some(false),
+        ..Default::default()
+    };
+    let sort = None;
+    let pagination = None;
+
+    let project_scopes = repository.find(filter, sort, pagination).await.unwrap();
+
+    assert_eq!(project_scopes.len(), 4);
+}
