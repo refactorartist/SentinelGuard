@@ -4,16 +4,11 @@ pub mod routes;
 // Define the macro here instead of including it from a file
 #[macro_export]
 macro_rules! create_test_app {
-    ($services:expr, $routes:expr) => {{
+    ($service:expr, $routes:expr) => {{
         let mut app = actix_web::App::new();
 
-        for service in $services {
-            app = app.app_data(actix_web::web::Data::new(service));
-        }
-
-        for route in $routes {
-            app = app.configure(route);
-        }
+        app = app.app_data(actix_web::web::Data::new($service));
+        app = app.configure($routes);
 
         actix_web::test::init_service(app).await
     }};

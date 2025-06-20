@@ -13,14 +13,14 @@ use sentinel_guard::{
 
 use crate::create_test_app;
 
-fn services(pool: PgPool) -> Vec<ServiceAccountService> {
-    vec![ServiceAccountService::new(ServiceAccountRepository::new(
+fn services(pool: PgPool) -> ServiceAccountService {
+    ServiceAccountService::new(ServiceAccountRepository::new(
         Arc::new(pool),
-    ))]
+    ))
 }
 
-fn routes() -> Vec<fn(&mut actix_web::web::ServiceConfig)> {
-    vec![service_account_route::configure_routes]
+fn routes() -> fn(&mut actix_web::web::ServiceConfig) {
+    service_account_route::configure_routes
 }
 
 #[sqlx::test]
