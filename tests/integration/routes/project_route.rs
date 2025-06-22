@@ -9,12 +9,12 @@ use sentinel_guard::{
     services::project_service::ProjectService,
 };
 
-fn services(pool: PgPool) -> Vec<ProjectService> {
-    vec![ProjectService::new(ProjectRepository::new(Arc::new(pool)))]
+fn services(pool: PgPool) -> ProjectService {
+    ProjectService::new(ProjectRepository::new(Arc::new(pool)))
 }
 
-fn routes() -> Vec<fn(&mut actix_web::web::ServiceConfig)> {
-    vec![project_route::configure_routes]
+fn routes() -> fn(&mut actix_web::web::ServiceConfig) {
+    project_route::configure_routes
 }
 
 use crate::create_test_app;
