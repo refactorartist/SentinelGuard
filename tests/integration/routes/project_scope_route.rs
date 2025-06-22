@@ -293,5 +293,40 @@ async fn test_project_scope_route_list_project_scopes_filter_by_description(pool
 }
 
 
-// TODO: test_project_scope_route_list_project_scopes_limit_success
-// TODO: test_project_scope_route_list_project_scopes_offset_success
+#[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/project_scopes.sql"))]
+async fn test_project_scope_route_list_project_scopes_limit_success(pool: PgPool) {
+    let app = create_test_app!(services(pool), routes());
+
+    let response = actix_web::test::TestRequest::get()
+        .uri("/project-scopes?limit=1")
+        .send_request(&app)
+        .await;
+
+    let project_scopes: Vec<ProjectScopeResponse> = actix_web::test::read_body_json(response).await;
+    assert!(!project_scopes.is_empty());
+    assert!(project_scopes.len() == 1);
+}
+
+#[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/project_scopes.sql"))]
+async fn test_project_scope_route_list_project_scopes_offset_success(pool: PgPool) {
+    let app = create_test_app!(services(pool), routes());
+
+    // First request - get first item
+    let first_response = actix_web::test::TestRequest::get()
+        .uri("/project-scopes?limit=1")
+        .send_request(&app)
+        .await;
+    
+    // Second request - get second item using offset
+    let second_response = actix_web::test::TestRequest::get()
+        .uri("/project-scopes?offset=1&limit=1")
+        .send_request(&app)
+        .await;
+
+    let first_scope: Vec<ProjectScopeResponse> = actix_web::test::read_body_json(first_response).await;
+    let second_scope: Vec<ProjectScopeResponse> = actix_web::test::read_body_json(second_response).await;
+    
+    assert_eq!(first_scope.len(), 1);
+    assert_eq!(second_scope.len(), 1);
+    assert_ne!(first_scope[0].id, second_scope[0].id, "Offset pagination failed - returned same record");
+}
