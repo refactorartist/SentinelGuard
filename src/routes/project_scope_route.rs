@@ -82,7 +82,7 @@ pub async fn patch(
             "Project scope not found" => {
                 return Err(actix_web::error::ErrorNotFound(error_message));
             }
-            "Project scope already exists" => {
+            "Project Id, scope combination already exists" => {
                 return Err(actix_web::error::ErrorConflict(error_message));
             }
             _ => return Err(actix_web::error::ErrorInternalServerError(error_message)),
@@ -110,11 +110,15 @@ pub async fn delete(
 ) -> Result<HttpResponse, Error> {
     let result = service.delete(id.into_inner()).await;
 
-    match result {
-        Ok(true) => Ok(HttpResponse::NoContent().finish()),
-        Ok(false) => Err(actix_web::error::ErrorNotFound("Project scope not found")),
-        Err(error) => Err(actix_web::error::ErrorInternalServerError(error)),
+    if result.is_err() {
+        let error_message = result.unwrap_err().to_string();
+        match error_message.as_str() {
+            "Project scope not found" => return Err(actix_web::error::ErrorNotFound(error_message)),
+            _ => return Err(actix_web::error::ErrorInternalServerError(error_message)),
+        }
     }
+
+    Ok(HttpResponse::NoContent().finish())
 }
 
 #[utoipa::path(

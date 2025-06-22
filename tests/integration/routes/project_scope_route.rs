@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use sentinel_guard::{models::project_scope::{ProjectScopeCreatePayload, ProjectScopeUpdatePayload}, repositories::project_scope_repository::ProjectScopeRepository, routes::project_scope_route, services::project_scope_service::ProjectScopeService};
+use sentinel_guard::{models::project_scope::{ProjectScopeCreatePayload, ProjectScopeResponse, ProjectScopeUpdatePayload}, repositories::project_scope_repository::ProjectScopeRepository, routes::project_scope_route, services::project_scope_service::ProjectScopeService};
 use sqlx::PgPool;
 
 use crate::{create_test_app};
@@ -163,3 +163,81 @@ async fn test_project_scope_route_patch_enabled_false_successful(pool: PgPool) {
 
     assert!(response.status().is_success());
 }
+
+
+#[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/project_scopes.sql"))]
+async fn test_project_scope_route_patch_duplicate_project_id_scope_fails(pool: PgPool) {
+    let app = create_test_app!(services(pool), routes());
+
+    let payload = ProjectScopeUpdatePayload {
+        scope: Some("testa:write".to_string()),
+        description: None,
+        enabled: None,
+    };
+
+    let response = actix_web::test::TestRequest::patch()
+        .uri("/project-scopes/00000000-0000-0000-0000-000000000001")
+        .set_json(&payload)
+        .send_request(&app)
+        .await;
+
+
+    dbg!(response.status());
+    assert_eq!(response.status(), actix_web::http::StatusCode::CONFLICT);
+}
+
+// TODO: test_project_scope_route_delete_project_scope_successful
+#[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/project_scopes.sql"))]
+async fn test_project_scope_route_delete_project_scope_successful(pool: PgPool) {
+    let app = create_test_app!(services(pool), routes());
+
+    let response = actix_web::test::TestRequest::delete()
+        .uri("/project-scopes/00000000-0000-0000-0000-000000000001")
+        .send_request(&app)
+        .await;
+
+    assert!(response.status().is_success());
+}
+
+
+
+// TODO: test_project_scope_route_delete_project_scope_not_found
+#[sqlx::test]
+async fn test_project_scope_route_delete_project_scope_not_found(pool: PgPool) {
+    let app = create_test_app!(services(pool), routes());
+
+    let response = actix_web::test::TestRequest::delete()
+        .uri("/project-scopes/00000000-0000-0000-0000-000000000002")
+        .send_request(&app)
+        .await;
+
+    dbg!(response.status());
+
+    assert!(response.status().is_client_error());
+    assert_eq!(response.status(), actix_web::http::StatusCode::NOT_FOUND);
+}
+
+
+
+// TODO: test_project_scope_route_list_project_scopes_filter_by_project_id
+#[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/project_scopes.sql"))]
+async fn test_project_scope_route_list_project_scopes_filter_by_project_id(pool: PgPool) {
+    let app = create_test_app!(services(pool), routes());
+
+    let response = actix_web::test::TestRequest::get()
+        .uri("/project-scopes?project_id=123e4567-e89b-12d3-a456-426614174000")
+        .send_request(&app)
+        .await;
+
+    let project_scopes: Vec<ProjectScopeResponse> = actix_web::test::read_body_json(response).await;
+    assert!(!project_scopes.is_empty());
+    assert!(project_scopes.iter().all(|p| p.project_id == "123e4567-e89b-12d3-a456-426614174000"));
+    
+}
+
+
+// TODO: test_project_scope_route_list_project_scopes_filter_by_enabled_true
+// TODO: test_project_scope_route_list_project_scopes_filter_by_scope
+// TODO: test_project_scope_route_list_project_scopes_filter_by_description
+// TODO: test_project_scope_route_list_project_scopes_limit_success
+// TODO: test_project_scope_route_list_project_scopes_offset_success

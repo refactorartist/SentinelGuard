@@ -21,6 +21,8 @@ pub struct ProjectScope {
 pub struct ProjectScopeResponse {
     #[schema(example = "123e4567-e89b-12d3-a456-426614174000")]
     pub id: String,
+    #[schema(example = "123e4567-e89b-12d3-a456-426614174000")]
+    pub project_id: String,
     #[schema(example = "Project Scope Name")]
     pub scope: String,
     #[schema(example = "Project Scope Description")]
@@ -37,6 +39,7 @@ impl From<ProjectScope> for ProjectScopeResponse {
     fn from(value: ProjectScope) -> Self {
         Self {
             id: value.id.unwrap().to_string(),
+            project_id: value.project_id.to_string(),
             scope: value.scope,
             description: value.description,
             enabled: value.enabled,
