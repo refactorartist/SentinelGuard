@@ -6,7 +6,7 @@ use sentinel_guard::routes::{service_account_route};
 use sentinel_guard::services::project_scope_service::ProjectScopeService;
 use sentinel_guard::services::project_service::ProjectService;
 use sentinel_guard::services::service_account_service::ServiceAccountService;
-use sentinel_guard::{config::AppConfig, routes::project_route};
+use sentinel_guard::{config::AppConfig, routes::project_route, routes::project_scope_route};
 use sqlx::postgres::PgPool;
 use std::{sync::Arc, time::Duration};
 use tokio::signal;
@@ -30,6 +30,11 @@ async fn main() -> Result<(), anyhow::Error> {
             service_account_route::patch,
             service_account_route::delete,
             service_account_route::list,
+            project_scope_route::post,
+            project_scope_route::get,
+            project_scope_route::patch,
+            project_scope_route::delete,
+            project_scope_route::list,
         ),
         tags(
             (name = "SentinelGuard", description = "SentinelGuard API documentation.")
