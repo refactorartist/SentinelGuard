@@ -186,7 +186,6 @@ async fn test_project_scope_route_patch_duplicate_project_id_scope_fails(pool: P
     assert_eq!(response.status(), actix_web::http::StatusCode::CONFLICT);
 }
 
-// TODO: test_project_scope_route_delete_project_scope_successful
 #[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/project_scopes.sql"))]
 async fn test_project_scope_route_delete_project_scope_successful(pool: PgPool) {
     let app = create_test_app!(services(pool), routes());
@@ -201,7 +200,6 @@ async fn test_project_scope_route_delete_project_scope_successful(pool: PgPool) 
 
 
 
-// TODO: test_project_scope_route_delete_project_scope_not_found
 #[sqlx::test]
 async fn test_project_scope_route_delete_project_scope_not_found(pool: PgPool) {
     let app = create_test_app!(services(pool), routes());
@@ -219,7 +217,6 @@ async fn test_project_scope_route_delete_project_scope_not_found(pool: PgPool) {
 
 
 
-// TODO: test_project_scope_route_list_project_scopes_filter_by_project_id
 #[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/project_scopes.sql"))]
 async fn test_project_scope_route_list_project_scopes_filter_by_project_id(pool: PgPool) {
     let app = create_test_app!(services(pool), routes());
@@ -237,7 +234,64 @@ async fn test_project_scope_route_list_project_scopes_filter_by_project_id(pool:
 
 
 // TODO: test_project_scope_route_list_project_scopes_filter_by_enabled_true
-// TODO: test_project_scope_route_list_project_scopes_filter_by_scope
-// TODO: test_project_scope_route_list_project_scopes_filter_by_description
+#[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/project_scopes.sql"))]
+async fn test_project_scope_route_list_project_scopes_filter_by_enabled_true(pool: PgPool) {
+    let app = create_test_app!(services(pool), routes());
+
+    let response = actix_web::test::TestRequest::get()
+        .uri("/project-scopes?enabled=true")
+        .send_request(&app)
+        .await;
+
+    let project_scopes: Vec<ProjectScopeResponse> = actix_web::test::read_body_json(response).await;
+    assert!(!project_scopes.is_empty());
+    assert!(project_scopes.iter().all(|p| p.enabled));
+}
+
+#[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/project_scopes.sql"))]
+async fn test_project_scope_route_list_project_scopes_filter_by_enabled_false(pool: PgPool) {
+    let app = create_test_app!(services(pool), routes());
+
+    let response = actix_web::test::TestRequest::get()
+        .uri("/project-scopes?enabled=false")
+        .send_request(&app)
+        .await;
+
+    let project_scopes: Vec<ProjectScopeResponse> = actix_web::test::read_body_json(response).await;
+    assert!(!project_scopes.is_empty());
+    assert!(project_scopes.iter().all(|p| !p.enabled));
+}
+
+
+#[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/project_scopes.sql"))]
+async fn test_project_scope_route_list_project_scopes_filter_by_scope(pool: PgPool) {
+    let app = create_test_app!(services(pool), routes());
+
+    let response = actix_web::test::TestRequest::get()
+        .uri("/project-scopes?scope=testa:read")
+        .send_request(&app)
+        .await;
+
+    let project_scopes: Vec<ProjectScopeResponse> = actix_web::test::read_body_json(response).await;
+    assert!(!project_scopes.is_empty());
+    assert!(project_scopes.iter().all(|p| p.scope == "testa:read"));
+}
+
+
+#[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/project_scopes.sql"))]
+async fn test_project_scope_route_list_project_scopes_filter_by_description(pool: PgPool) {
+    let app = create_test_app!(services(pool), routes());
+
+    let response = actix_web::test::TestRequest::get()
+        .uri("/project-scopes?description=Read+access")
+        .send_request(&app)
+        .await;
+
+    let project_scopes: Vec<ProjectScopeResponse> = actix_web::test::read_body_json(response).await;
+    assert!(!project_scopes.is_empty());
+    assert!(project_scopes.iter().all(|p| p.description.to_lowercase().contains("read access")));
+}
+
+
 // TODO: test_project_scope_route_list_project_scopes_limit_success
 // TODO: test_project_scope_route_list_project_scopes_offset_success
