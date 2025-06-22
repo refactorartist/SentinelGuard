@@ -1,7 +1,7 @@
 use crate::models::pagination::Pagination;
 use crate::models::project_scope::{
-    ProjectScopeCreatePayload, ProjectScopeFilter, ProjectScopeResponse,
-    ProjectScopeSortOrder, ProjectScopeSortableFields, ProjectScopeUpdatePayload,
+    ProjectScopeCreatePayload, ProjectScopeFilter, ProjectScopeResponse, ProjectScopeSortOrder,
+    ProjectScopeSortableFields, ProjectScopeUpdatePayload,
 };
 use crate::models::sort::SortOrder;
 use crate::services::base::Service;
@@ -49,7 +49,7 @@ pub async fn get(
         .read(id.into_inner())
         .await
         .map_err(actix_web::error::ErrorNotFound)?;
-    
+
     Ok(HttpResponse::Ok().json(project_scope))
 }
 
@@ -113,7 +113,9 @@ pub async fn delete(
     if result.is_err() {
         let error_message = result.unwrap_err().to_string();
         match error_message.as_str() {
-            "Project scope not found" => return Err(actix_web::error::ErrorNotFound(error_message)),
+            "Project scope not found" => {
+                return Err(actix_web::error::ErrorNotFound(error_message));
+            }
             _ => return Err(actix_web::error::ErrorInternalServerError(error_message)),
         }
     }
@@ -154,12 +156,12 @@ pub async fn list(
         )
         .await
         .map_err(actix_web::error::ErrorInternalServerError)?;
-    
+
     let responses: Vec<ProjectScopeResponse> = project_scopes
         .into_iter()
         .map(ProjectScopeResponse::from)
         .collect();
-    
+
     Ok(HttpResponse::Ok().json(responses))
 }
 

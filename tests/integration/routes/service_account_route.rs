@@ -14,9 +14,7 @@ use sentinel_guard::{
 use crate::create_test_app;
 
 fn services(pool: PgPool) -> ServiceAccountService {
-    ServiceAccountService::new(ServiceAccountRepository::new(
-        Arc::new(pool),
-    ))
+    ServiceAccountService::new(ServiceAccountRepository::new(Arc::new(pool)))
 }
 
 fn routes() -> fn(&mut actix_web::web::ServiceConfig) {

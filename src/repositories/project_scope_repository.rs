@@ -3,7 +3,7 @@ use std::sync::Arc;
 use anyhow::Error;
 use async_trait::async_trait;
 use chrono::Utc;
-use sqlx::{Row, QueryBuilder};
+use sqlx::{QueryBuilder, Row};
 use uuid::Uuid;
 
 use crate::{
@@ -103,7 +103,7 @@ impl Repository<ProjectScope> for ProjectScopeRepository {
     }
 
     async fn update(&self, id: Uuid, update: Self::UpdatePayload) -> Result<ProjectScope, Error> {
-        let mut changes = Vec::new(); 
+        let mut changes = Vec::new();
 
         if let Some(scope) = update.scope {
             changes.push(("scope", scope));
@@ -139,7 +139,8 @@ impl Repository<ProjectScope> for ProjectScopeRepository {
 
         query.push(", updated_at = ").push_bind(Utc::now());
         query.push(" WHERE id = ").push_bind(id);
-        query.push(" RETURNING id, project_id, scope, description, enabled, created_at, updated_at");
+        query
+            .push(" RETURNING id, project_id, scope, description, enabled, created_at, updated_at");
 
         let result = query
             .build()
@@ -184,13 +185,10 @@ impl Repository<ProjectScope> for ProjectScopeRepository {
     }
 
     async fn delete(&self, id: Uuid) -> Result<bool, Error> {
-        let deleted = sqlx::query!(
-            "DELETE FROM project_scopes WHERE id = $1 RETURNING id",
-            id,
-        )
-        .fetch_optional(&*self.pool)
-        .await
-        .map_err(<sqlx::Error as Into<Error>>::into)?;
+        let deleted = sqlx::query!("DELETE FROM project_scopes WHERE id = $1 RETURNING id", id,)
+            .fetch_optional(&*self.pool)
+            .await
+            .map_err(<sqlx::Error as Into<Error>>::into)?;
 
         if deleted.is_none() {
             return Err(Error::msg("Project scope not found"));
@@ -208,8 +206,6 @@ impl Repository<ProjectScope> for ProjectScopeRepository {
         let mut query = QueryBuilder::new(
             "SELECT id, project_id, scope, description, enabled, created_at, updated_at FROM project_scopes ",
         );
-
-        
 
         let mut conditions_list = Vec::new();
 
@@ -269,20 +265,22 @@ impl Repository<ProjectScope> for ProjectScopeRepository {
                 .push_bind(pagination.offset.unwrap_or(0));
         }
 
-        let project_scopes = query.build().fetch_all(&*self.pool).await.map_err(
-            <sqlx::Error as Into<Error>>::into
-        )?
-        .into_iter()
-        .map(|row| ProjectScope {
-            id: row.get("id"),
-            project_id: row.get("project_id"),
-            scope: row.get("scope"),
-            description: row.get("description"),
-            enabled: row.get("enabled"),
-            created_at: row.get("created_at"),
-            updated_at: row.get("updated_at"),
-        })
-        .collect();
+        let project_scopes = query
+            .build()
+            .fetch_all(&*self.pool)
+            .await
+            .map_err(<sqlx::Error as Into<Error>>::into)?
+            .into_iter()
+            .map(|row| ProjectScope {
+                id: row.get("id"),
+                project_id: row.get("project_id"),
+                scope: row.get("scope"),
+                description: row.get("description"),
+                enabled: row.get("enabled"),
+                created_at: row.get("created_at"),
+                updated_at: row.get("updated_at"),
+            })
+            .collect();
 
         Ok(project_scopes)
     }

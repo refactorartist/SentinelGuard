@@ -1,20 +1,24 @@
 use std::sync::Arc;
 
-use sentinel_guard::{models::project_scope::{ProjectScopeCreatePayload, ProjectScopeResponse, ProjectScopeUpdatePayload}, repositories::project_scope_repository::ProjectScopeRepository, routes::project_scope_route, services::project_scope_service::ProjectScopeService};
+use sentinel_guard::{
+    models::project_scope::{
+        ProjectScopeCreatePayload, ProjectScopeResponse, ProjectScopeUpdatePayload,
+    },
+    repositories::project_scope_repository::ProjectScopeRepository,
+    routes::project_scope_route,
+    services::project_scope_service::ProjectScopeService,
+};
 use sqlx::PgPool;
 
-use crate::{create_test_app};
+use crate::create_test_app;
 
 fn services(pool: PgPool) -> ProjectScopeService {
-    ProjectScopeService::new(ProjectScopeRepository::new(
-        Arc::new(pool),
-    ))
+    ProjectScopeService::new(ProjectScopeRepository::new(Arc::new(pool)))
 }
 
 fn routes() -> fn(&mut actix_web::web::ServiceConfig) {
     project_scope_route::configure_routes
 }
-
 
 #[sqlx::test(fixtures("../fixtures/projects.sql"))]
 async fn test_project_scope_route_create_project_scope_with_valid_data_succeeds(pool: PgPool) {
@@ -37,7 +41,9 @@ async fn test_project_scope_route_create_project_scope_with_valid_data_succeeds(
 }
 
 #[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/project_scopes.sql"))]
-async fn test_project_scope_route_create_project_scope_with_duplicate_project_id_scope_fails(pool: PgPool) {
+async fn test_project_scope_route_create_project_scope_with_duplicate_project_id_scope_fails(
+    pool: PgPool,
+) {
     let app = create_test_app!(services(pool), routes());
 
     let project_scope = ProjectScopeCreatePayload {
@@ -69,7 +75,6 @@ async fn test_project_scope_route_read_project_scope_by_id_successful(pool: PgPo
     assert!(response.status().is_success());
 }
 
-
 #[sqlx::test]
 async fn test_project_scope_route_read_project_scope_by_id_not_found(pool: PgPool) {
     let app = create_test_app!(services(pool), routes());
@@ -82,7 +87,6 @@ async fn test_project_scope_route_read_project_scope_by_id_not_found(pool: PgPoo
     assert!(response.status().is_client_error());
     assert_eq!(response.status(), actix_web::http::StatusCode::NOT_FOUND);
 }
-
 
 #[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/project_scopes.sql"))]
 async fn test_project_scope_route_patch_scope_successful(pool: PgPool) {
@@ -103,8 +107,6 @@ async fn test_project_scope_route_patch_scope_successful(pool: PgPool) {
     assert!(response.status().is_success());
 }
 
-
-
 #[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/project_scopes.sql"))]
 async fn test_project_scope_route_patch_description_successful(pool: PgPool) {
     let app = create_test_app!(services(pool), routes());
@@ -123,7 +125,6 @@ async fn test_project_scope_route_patch_description_successful(pool: PgPool) {
 
     assert!(response.status().is_success());
 }
-
 
 #[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/project_scopes.sql"))]
 async fn test_project_scope_route_patch_enabled_true_successful(pool: PgPool) {
@@ -144,7 +145,6 @@ async fn test_project_scope_route_patch_enabled_true_successful(pool: PgPool) {
     assert!(response.status().is_success());
 }
 
-
 #[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/project_scopes.sql"))]
 async fn test_project_scope_route_patch_enabled_false_successful(pool: PgPool) {
     let app = create_test_app!(services(pool), routes());
@@ -164,7 +164,6 @@ async fn test_project_scope_route_patch_enabled_false_successful(pool: PgPool) {
     assert!(response.status().is_success());
 }
 
-
 #[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/project_scopes.sql"))]
 async fn test_project_scope_route_patch_duplicate_project_id_scope_fails(pool: PgPool) {
     let app = create_test_app!(services(pool), routes());
@@ -180,7 +179,6 @@ async fn test_project_scope_route_patch_duplicate_project_id_scope_fails(pool: P
         .set_json(&payload)
         .send_request(&app)
         .await;
-
 
     dbg!(response.status());
     assert_eq!(response.status(), actix_web::http::StatusCode::CONFLICT);
@@ -198,8 +196,6 @@ async fn test_project_scope_route_delete_project_scope_successful(pool: PgPool) 
     assert!(response.status().is_success());
 }
 
-
-
 #[sqlx::test]
 async fn test_project_scope_route_delete_project_scope_not_found(pool: PgPool) {
     let app = create_test_app!(services(pool), routes());
@@ -215,8 +211,6 @@ async fn test_project_scope_route_delete_project_scope_not_found(pool: PgPool) {
     assert_eq!(response.status(), actix_web::http::StatusCode::NOT_FOUND);
 }
 
-
-
 #[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/project_scopes.sql"))]
 async fn test_project_scope_route_list_project_scopes_filter_by_project_id(pool: PgPool) {
     let app = create_test_app!(services(pool), routes());
@@ -228,10 +222,12 @@ async fn test_project_scope_route_list_project_scopes_filter_by_project_id(pool:
 
     let project_scopes: Vec<ProjectScopeResponse> = actix_web::test::read_body_json(response).await;
     assert!(!project_scopes.is_empty());
-    assert!(project_scopes.iter().all(|p| p.project_id == "123e4567-e89b-12d3-a456-426614174000"));
-    
+    assert!(
+        project_scopes
+            .iter()
+            .all(|p| p.project_id == "123e4567-e89b-12d3-a456-426614174000")
+    );
 }
-
 
 // TODO: test_project_scope_route_list_project_scopes_filter_by_enabled_true
 #[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/project_scopes.sql"))]
@@ -262,7 +258,6 @@ async fn test_project_scope_route_list_project_scopes_filter_by_enabled_false(po
     assert!(project_scopes.iter().all(|p| !p.enabled));
 }
 
-
 #[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/project_scopes.sql"))]
 async fn test_project_scope_route_list_project_scopes_filter_by_scope(pool: PgPool) {
     let app = create_test_app!(services(pool), routes());
@@ -277,7 +272,6 @@ async fn test_project_scope_route_list_project_scopes_filter_by_scope(pool: PgPo
     assert!(project_scopes.iter().all(|p| p.scope == "testa:read"));
 }
 
-
 #[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/project_scopes.sql"))]
 async fn test_project_scope_route_list_project_scopes_filter_by_description(pool: PgPool) {
     let app = create_test_app!(services(pool), routes());
@@ -289,9 +283,12 @@ async fn test_project_scope_route_list_project_scopes_filter_by_description(pool
 
     let project_scopes: Vec<ProjectScopeResponse> = actix_web::test::read_body_json(response).await;
     assert!(!project_scopes.is_empty());
-    assert!(project_scopes.iter().all(|p| p.description.to_lowercase().contains("read access")));
+    assert!(
+        project_scopes
+            .iter()
+            .all(|p| p.description.to_lowercase().contains("read access"))
+    );
 }
-
 
 #[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/project_scopes.sql"))]
 async fn test_project_scope_route_list_project_scopes_limit_success(pool: PgPool) {
@@ -316,17 +313,22 @@ async fn test_project_scope_route_list_project_scopes_offset_success(pool: PgPoo
         .uri("/project-scopes?limit=1")
         .send_request(&app)
         .await;
-    
+
     // Second request - get second item using offset
     let second_response = actix_web::test::TestRequest::get()
         .uri("/project-scopes?offset=1&limit=1")
         .send_request(&app)
         .await;
 
-    let first_scope: Vec<ProjectScopeResponse> = actix_web::test::read_body_json(first_response).await;
-    let second_scope: Vec<ProjectScopeResponse> = actix_web::test::read_body_json(second_response).await;
-    
+    let first_scope: Vec<ProjectScopeResponse> =
+        actix_web::test::read_body_json(first_response).await;
+    let second_scope: Vec<ProjectScopeResponse> =
+        actix_web::test::read_body_json(second_response).await;
+
     assert_eq!(first_scope.len(), 1);
     assert_eq!(second_scope.len(), 1);
-    assert_ne!(first_scope[0].id, second_scope[0].id, "Offset pagination failed - returned same record");
+    assert_ne!(
+        first_scope[0].id, second_scope[0].id,
+        "Offset pagination failed - returned same record"
+    );
 }

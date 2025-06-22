@@ -1,7 +1,10 @@
 use std::sync::Arc;
 
 use sentinel_guard::{
-    models::{pagination::Pagination, project_scope::{ProjectScopeCreatePayload, ProjectScopeFilter, ProjectScopeUpdatePayload}},
+    models::{
+        pagination::Pagination,
+        project_scope::{ProjectScopeCreatePayload, ProjectScopeFilter, ProjectScopeUpdatePayload},
+    },
     repositories::{base::Repository, project_scope_repository::ProjectScopeRepository},
 };
 use sqlx::PgPool;
@@ -116,7 +119,6 @@ async fn test_project_scope_repository_update_scope_succeeds(pool: PgPool) {
     assert_eq!(project_scope.scope, "testa:changes-made");
 }
 
-
 #[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/project_scopes.sql"))]
 async fn test_project_scope_repository_update_description_succeeds(pool: PgPool) {
     let repository = ProjectScopeRepository::new(Arc::new(pool));
@@ -149,7 +151,6 @@ async fn test_project_scope_repository_update_enabled_to_false_succeeds(pool: Pg
     assert!(!project_scope.enabled);
 }
 
-
 #[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/project_scopes.sql"))]
 async fn test_project_scope_repository_update_enabled_to_true_succeeds(pool: PgPool) {
     let repository = ProjectScopeRepository::new(Arc::new(pool));
@@ -166,7 +167,6 @@ async fn test_project_scope_repository_update_enabled_to_true_succeeds(pool: PgP
     assert!(project_scope.enabled);
 }
 
-
 #[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/project_scopes.sql"))]
 async fn test_project_scope_repository_update_scope_duplicated_fails(pool: PgPool) {
     let repository = ProjectScopeRepository::new(Arc::new(pool));
@@ -182,7 +182,10 @@ async fn test_project_scope_repository_update_scope_duplicated_fails(pool: PgPoo
 
     assert!(project_scope.is_err());
     let error_message = project_scope.unwrap_err().to_string();
-    assert_eq!(error_message, "Project Id, scope combination already exists");
+    assert_eq!(
+        error_message,
+        "Project Id, scope combination already exists"
+    );
 }
 
 #[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/project_scopes.sql"))]
@@ -196,7 +199,6 @@ async fn test_project_scope_delete_existing_scope_succeeds(pool: PgPool) {
     assert!(project_scope);
 }
 
-
 #[sqlx::test]
 async fn test_project_scope_delete_nonexisting_scope_fails(pool: PgPool) {
     let repository = ProjectScopeRepository::new(Arc::new(pool));
@@ -209,7 +211,6 @@ async fn test_project_scope_delete_nonexisting_scope_fails(pool: PgPool) {
     let error_message = project_scope.unwrap_err().to_string();
     assert_eq!(error_message, "Project scope not found");
 }
-
 
 #[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/project_scopes.sql"))]
 async fn test_project_scope_find_with_limit_pagination(pool: PgPool) {
@@ -259,7 +260,6 @@ async fn test_project_scope_find_with_limit_offset_pagination(pool: PgPool) {
     assert_eq!(project_scopes.len(), 2);
 }
 
-
 #[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/project_scopes.sql"))]
 async fn test_project_scope_find_with_project_id_filter(pool: PgPool) {
     let repository = ProjectScopeRepository::new(Arc::new(pool));
@@ -275,7 +275,6 @@ async fn test_project_scope_find_with_project_id_filter(pool: PgPool) {
 
     assert_eq!(project_scopes.len(), 6);
 }
-
 
 #[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/project_scopes.sql"))]
 async fn test_project_scope_find_with_scope_filter(pool: PgPool) {
@@ -293,7 +292,6 @@ async fn test_project_scope_find_with_scope_filter(pool: PgPool) {
     assert_eq!(project_scopes.len(), 1);
 }
 
-
 #[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/project_scopes.sql"))]
 async fn test_project_scope_find_with_description_filter(pool: PgPool) {
     let repository = ProjectScopeRepository::new(Arc::new(pool));
@@ -310,7 +308,7 @@ async fn test_project_scope_find_with_description_filter(pool: PgPool) {
     assert_eq!(project_scopes.len(), 6);
 }
 
-// TODO: Add tests for find with enabled filter 
+// TODO: Add tests for find with enabled filter
 #[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/project_scopes.sql"))]
 async fn test_project_scope_find_with_enabled_is_true_filter(pool: PgPool) {
     let repository = ProjectScopeRepository::new(Arc::new(pool));
@@ -326,7 +324,6 @@ async fn test_project_scope_find_with_enabled_is_true_filter(pool: PgPool) {
 
     assert_eq!(project_scopes.len(), 10);
 }
-
 
 #[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/project_scopes.sql"))]
 async fn test_project_scope_find_with_enabled_is_false_filter(pool: PgPool) {
