@@ -58,7 +58,25 @@ async fn test_environment_repository_create_with_duplicate_project_id_scope_fail
 }
 
 
-// TODO: test_environment_repository_read_existing_account_succeeds
+#[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/environments.sql"))]
+async fn test_environment_repository_read_existing_account_succeeds(pool: PgPool) {
+    let repository = EnvironmentRepository::new(Arc::new(pool));
+
+    let response = repository.read("00000000-0000-0000-0000-000000000001".parse().unwrap()).await;
+
+    assert!(response.is_ok());
+    let environment = response.unwrap();
+
+    assert!(environment.is_some());
+
+    let environment = environment.unwrap();
+    assert_eq!(environment.name, "dev");
+    assert_eq!(environment.description, "Development environment");
+    assert_eq!(environment.enabled, true);
+}
+
+
+
 // TODO: test_environment_repository_read_nonexistent_account_returns_error
 // TODO: test_environment_repository_update_scope_succeeds
 // TODO: test_environment_repository_update_description_succeeds
