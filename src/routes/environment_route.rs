@@ -1,8 +1,8 @@
-use crate::models::pagination::Pagination;
 use crate::models::environment::{
     EnvironmentCreatePayload, EnvironmentFilter, EnvironmentResponse, EnvironmentSortOrder,
     EnvironmentSortableFields, EnvironmentUpdatePayload,
 };
+use crate::models::pagination::Pagination;
 use crate::models::sort::SortOrder;
 use crate::services::base::Service;
 use crate::services::environment_service::EnvironmentService;

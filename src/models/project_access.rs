@@ -157,7 +157,8 @@ mod tests {
 
     #[test]
     fn test_project_access_sort_order_new() {
-        let sort = ProjectAccessSortOrder::new(ProjectAccessSortableFields::ProjectId, SortOrder::Asc);
+        let sort =
+            ProjectAccessSortOrder::new(ProjectAccessSortableFields::ProjectId, SortOrder::Asc);
         assert!(matches!(sort.field, ProjectAccessSortableFields::ProjectId));
         assert!(matches!(sort.order, SortOrder::Asc));
     }

@@ -220,9 +220,11 @@ async fn test_environment_route_list_environments_filter_by_project_id(pool: PgP
 
     let environments: Vec<EnvironmentResponse> = actix_web::test::read_body_json(response).await;
     assert!(!environments.is_empty());
-    assert!(environments
-        .iter()
-        .all(|e| e.project_id == "123e4567-e89b-12d3-a456-426614174000"));
+    assert!(
+        environments
+            .iter()
+            .all(|e| e.project_id == "123e4567-e89b-12d3-a456-426614174000")
+    );
 }
 
 #[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/environments.sql"))]
@@ -278,9 +280,11 @@ async fn test_environment_route_list_environments_filter_by_description(pool: Pg
 
     let environments: Vec<EnvironmentResponse> = actix_web::test::read_body_json(response).await;
     assert!(!environments.is_empty());
-    assert!(environments
-        .iter()
-        .all(|e| e.description.contains("Development")));
+    assert!(
+        environments
+            .iter()
+            .all(|e| e.description.contains("Development"))
+    );
 }
 
 #[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/environments.sql"))]
@@ -314,7 +318,8 @@ async fn test_environment_route_list_environments_offset_success(pool: PgPool) {
         .await;
 
     let first_env: Vec<EnvironmentResponse> = actix_web::test::read_body_json(first_response).await;
-    let second_env: Vec<EnvironmentResponse> = actix_web::test::read_body_json(second_response).await;
+    let second_env: Vec<EnvironmentResponse> =
+        actix_web::test::read_body_json(second_response).await;
 
     assert_eq!(first_env.len(), 1);
     assert_eq!(second_env.len(), 1);

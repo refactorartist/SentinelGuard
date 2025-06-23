@@ -128,8 +128,14 @@ mod tests {
 
     #[test]
     fn test_project_access_scope_sort_order_new() {
-        let sort = ProjectAccessScopeSortOrder::new(ProjectAccessScopeSortableFields::ScopeId, SortOrder::Asc);
-        assert!(matches!(sort.field, ProjectAccessScopeSortableFields::ScopeId));
+        let sort = ProjectAccessScopeSortOrder::new(
+            ProjectAccessScopeSortableFields::ScopeId,
+            SortOrder::Asc,
+        );
+        assert!(matches!(
+            sort.field,
+            ProjectAccessScopeSortableFields::ScopeId
+        ));
         assert!(matches!(sort.order, SortOrder::Asc));
     }
 }
