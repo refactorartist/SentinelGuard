@@ -77,7 +77,17 @@ async fn test_environment_repository_read_existing_account_succeeds(pool: PgPool
 
 
 
-// TODO: test_environment_repository_read_nonexistent_account_returns_error
+#[sqlx::test]
+async fn test_environment_repository_read_nonexistent_account_returns_error(pool: PgPool) {
+    let repository = EnvironmentRepository::new(Arc::new(pool));
+
+    let response = repository.read("00000000-0000-0000-0000-000000000002".parse().unwrap()).await;
+
+    assert!(response.is_err());
+    assert_eq!(response.unwrap_err().to_string(), "Environment not found");
+}
+
+
 // TODO: test_environment_repository_update_scope_succeeds
 // TODO: test_environment_repository_update_description_succeeds
 // TODO: test_environment_repository_update_enabled_to_false_succeeds
