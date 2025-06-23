@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use sentinel_guard::{models::environment::{EnvironmentCreatePayload, EnvironmentUpdatePayload}, repositories::{base::Repository, environment_repository::EnvironmentRepository}};
+use sentinel_guard::{models::{environment::{EnvironmentCreatePayload, EnvironmentFilter, EnvironmentUpdatePayload}, pagination::Pagination}, repositories::{base::Repository, environment_repository::EnvironmentRepository}};
 use sqlx::PgPool;
 
 #[sqlx::test(fixtures("../fixtures/projects.sql"))]
@@ -191,7 +191,26 @@ async fn test_environment_repository_delete_nonexisting_environment_fails(pool: 
     assert_eq!(response.unwrap_err().to_string(), "Environment not found");
 }
 
-// TODO: test_environment_repository_find_with_limit_pagination
+#[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/environments.sql"))]
+async fn test_environment_repository_find_with_limit_pagination(pool: PgPool) {
+    let repository = EnvironmentRepository::new(Arc::new(pool));
+    let pagination = Pagination {
+        limit: Some(1),
+        offset: Some(0),
+    };
+
+    let filter = EnvironmentFilter::default();
+
+    let sort = None;
+
+    let response = repository.find(filter, sort, Some(pagination)).await;
+
+    assert!(response.is_ok());
+    let environments = response.unwrap();
+
+    assert_eq!(environments.len(), 1);
+}
+
 // TODO: test_environment_repository_find_with_offset_pagination
 // TODO: test_environment_repository_find_with_limit_offset_pagination
 // TODO: test_environment_repository_find_with_project_id_filter
