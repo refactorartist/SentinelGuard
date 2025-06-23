@@ -105,7 +105,23 @@ async fn test_environment_repository_update_name_succeeds(pool: PgPool) {
 }
 
 
-// TODO: test_environment_repository_update_description_succeeds
+#[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/environments.sql"))]
+async fn test_environment_repository_update_description_succeeds(pool: PgPool) {
+    let repository = EnvironmentRepository::new(Arc::new(pool));
+
+    let response = repository.update("00000000-0000-0000-0000-000000000001".parse().unwrap(), EnvironmentUpdatePayload {
+        name: None,
+        description: Some("change-me".to_string()),
+        enabled: None,
+    }).await;
+
+    assert!(response.is_ok());
+    let environment = response.unwrap();
+
+    assert_eq!(environment.description, "change-me");
+}
+
+
 // TODO: test_environment_repository_update_enabled_to_false_succeeds
 // TODO: test_environment_repository_update_enabled_to_true_succeeds
 // TODO: test_environment_repository_update_scope_duplicated_fails
