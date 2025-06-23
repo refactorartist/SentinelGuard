@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use sentinel_guard::{models::environment::EnvironmentCreatePayload, repositories::{base::Repository, environment_repository::EnvironmentRepository}};
+use sentinel_guard::{models::environment::{EnvironmentCreatePayload, EnvironmentUpdatePayload}, repositories::{base::Repository, environment_repository::EnvironmentRepository}};
 use sqlx::PgPool;
 
 #[sqlx::test(fixtures("../fixtures/projects.sql"))]
@@ -88,7 +88,23 @@ async fn test_environment_repository_read_nonexistent_account_returns_error(pool
 }
 
 
-// TODO: test_environment_repository_update_scope_succeeds
+#[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/environments.sql"))]
+async fn test_environment_repository_update_name_succeeds(pool: PgPool) {
+    let repository = EnvironmentRepository::new(Arc::new(pool));
+
+    let response = repository.update("00000000-0000-0000-0000-000000000001".parse().unwrap(), EnvironmentUpdatePayload {
+        name: Some("change-me".to_string()),
+        description: None,
+        enabled: None,
+    }).await;
+
+    assert!(response.is_ok());
+    let environment = response.unwrap();
+
+    assert_eq!(environment.name, "change-me");
+}
+
+
 // TODO: test_environment_repository_update_description_succeeds
 // TODO: test_environment_repository_update_enabled_to_false_succeeds
 // TODO: test_environment_repository_update_enabled_to_true_succeeds
