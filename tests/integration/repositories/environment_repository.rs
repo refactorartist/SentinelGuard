@@ -211,7 +211,36 @@ async fn test_environment_repository_find_with_limit_pagination(pool: PgPool) {
     assert_eq!(environments.len(), 1);
 }
 
-// TODO: test_environment_repository_find_with_offset_pagination
+#[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/environments.sql"))]
+async fn test_environment_repository_find_with_offset_pagination(pool: PgPool) {
+    let repository = EnvironmentRepository::new(Arc::new(pool));
+    
+    // First request - get first item
+    let first_pagination = Pagination {
+        limit: Some(1),
+        offset: None,
+    };
+    
+    let first_response = repository.find(EnvironmentFilter::default(), None, Some(first_pagination)).await;
+    assert!(first_response.is_ok());
+    let first_environments = first_response.unwrap();
+    assert_eq!(first_environments.len(), 1);
+    
+    // Second request - get first item with explicit offset
+    let second_pagination = Pagination {
+        limit: Some(1),
+        offset: Some(1),
+    };
+    
+    let second_response = repository.find(EnvironmentFilter::default(), None, Some(second_pagination)).await;
+    assert!(second_response.is_ok());
+    let second_environments = second_response.unwrap();
+    assert_eq!(second_environments.len(), 1);
+    
+    // Verify we got the same environment (since offset 0 is the same as no offset)
+    assert_ne!(first_environments[0].id, second_environments[0].id);
+}
+
 // TODO: test_environment_repository_find_with_limit_offset_pagination
 // TODO: test_environment_repository_find_with_project_id_filter
 // TODO: test_environment_repository_find_with_scope_filter
