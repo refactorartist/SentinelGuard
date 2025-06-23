@@ -1,3 +1,4 @@
+pub mod environment;
 pub mod pagination;
 pub mod project;
 pub mod project_scope;
