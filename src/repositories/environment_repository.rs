@@ -41,7 +41,7 @@ impl Repository<Environment> for EnvironmentRepository {
             project_id: item.project_id.parse().unwrap(),
             name: item.name,
             description: item.description,
-            enabled: item.enabled.unwrap_or(true),
+            enabled: item.enabled,
             created_at: Utc::now(),
             updated_at: Utc::now(),
         };

@@ -11,7 +11,7 @@ pub struct Environment {
     pub id: Option<Uuid>,
     pub project_id: Uuid,
     pub name: String,
-    pub description: Option<String>,
+    pub description: String,
     pub enabled: bool,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
@@ -26,7 +26,7 @@ pub struct EnvironmentResponse {
     #[schema(example = "Production")]
     pub name: String,
     #[schema(example = "Production environment for the application")]
-    pub description: Option<String>,
+    pub description: String,
     #[schema(example = "true")]
     pub enabled: bool,
     #[schema(example = "2025-06-23T03:48:22.000Z")]
@@ -61,8 +61,8 @@ pub struct EnvironmentFilter {
 pub struct EnvironmentCreatePayload {
     pub project_id: String,
     pub name: String,
-    pub description: Option<String>,
-    pub enabled: Option<bool>,
+    pub description: String,
+    pub enabled: bool,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, ToSchema)]
@@ -115,7 +115,7 @@ mod tests {
         assert!(environment.id.is_none());
         assert_eq!(environment.project_id, Uuid::nil());
         assert_eq!(environment.name, "");
-        assert!(environment.description.is_none());
+        assert_eq!(environment.description, "");
         assert!(!environment.enabled);
     }
 
