@@ -122,8 +122,40 @@ async fn test_environment_repository_update_description_succeeds(pool: PgPool) {
 }
 
 
-// TODO: test_environment_repository_update_enabled_to_false_succeeds
-// TODO: test_environment_repository_update_enabled_to_true_succeeds
+#[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/environments.sql"))]
+async fn test_environment_repository_update_enabled_to_false_succeeds(pool: PgPool) {
+    let repository = EnvironmentRepository::new(Arc::new(pool));
+
+    let response = repository.update("00000000-0000-0000-0000-000000000001".parse().unwrap(), EnvironmentUpdatePayload {
+        name: None,
+        description: None,
+        enabled: Some(false),
+    }).await;
+
+    assert!(response.is_ok());
+    let environment = response.unwrap();
+
+    assert_eq!(environment.enabled, false);
+}
+
+
+#[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/environments.sql"))]
+async fn test_environment_repository_update_enabled_to_true_succeeds(pool: PgPool) {
+    let repository = EnvironmentRepository::new(Arc::new(pool));
+
+    let response = repository.update("00000000-0000-0000-0000-000000000002".parse().unwrap(), EnvironmentUpdatePayload {
+        name: None,
+        description: None,
+        enabled: Some(true),
+    }).await;
+
+    assert!(response.is_ok());
+    let environment = response.unwrap();
+
+    assert_eq!(environment.enabled, true);
+}
+
+
 // TODO: test_environment_repository_update_scope_duplicated_fails
 // TODO: test_environment_repository_delete_existing_scope_succeeds
 // TODO: test_environment_repository_delete_nonexisting_scope_fails
