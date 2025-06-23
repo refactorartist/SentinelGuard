@@ -157,6 +157,21 @@ async fn test_environment_repository_update_enabled_to_true_succeeds(pool: PgPoo
 
 
 // TODO: test_environment_repository_update_scope_duplicated_fails
+#[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/environments.sql"))]
+async fn test_environment_repository_update_scope_duplicated_fails(pool: PgPool) {
+    let repository = EnvironmentRepository::new(Arc::new(pool));
+
+    let response = repository.update("00000000-0000-0000-0000-000000000002".parse().unwrap(), EnvironmentUpdatePayload {
+        name: Some("dev".to_string()),
+        description: None,
+        enabled: None,
+    }).await;
+
+    assert!(response.is_err());
+    assert_eq!(response.unwrap_err().to_string(), "Project Id, name combination already exists");
+}
+
+
 // TODO: test_environment_repository_delete_existing_scope_succeeds
 // TODO: test_environment_repository_delete_nonexisting_scope_fails
 // TODO: test_environment_repository_find_with_limit_pagination
