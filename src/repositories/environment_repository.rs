@@ -137,8 +137,7 @@ impl Repository<Environment> for EnvironmentRepository {
 
         query.push(", updated_at = ").push_bind(Utc::now());
         query.push(" WHERE id = ").push_bind(id);
-        query
-            .push(" RETURNING id, project_id, name, description, enabled, created_at, updated_at");
+        query.push(" RETURNING id, project_id, name, description, enabled, created_at, updated_at");
 
         let result = query
             .build()
