@@ -156,7 +156,6 @@ async fn test_environment_repository_update_enabled_to_true_succeeds(pool: PgPoo
 }
 
 
-// TODO: test_environment_repository_update_scope_duplicated_fails
 #[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/environments.sql"))]
 async fn test_environment_repository_update_scope_duplicated_fails(pool: PgPool) {
     let repository = EnvironmentRepository::new(Arc::new(pool));
@@ -172,8 +171,26 @@ async fn test_environment_repository_update_scope_duplicated_fails(pool: PgPool)
 }
 
 
-// TODO: test_environment_repository_delete_existing_scope_succeeds
-// TODO: test_environment_repository_delete_nonexisting_scope_fails
+#[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/environments.sql"))]
+async fn test_environment_repository_delete_existing_environment_succeeds(pool: PgPool) {
+    let repository = EnvironmentRepository::new(Arc::new(pool));
+
+    let response = repository.delete("00000000-0000-0000-0000-000000000001".parse().unwrap()).await;
+
+    assert!(response.is_ok());
+}
+
+
+#[sqlx::test(fixtures("../fixtures/projects.sql"))]
+async fn test_environment_repository_delete_nonexisting_environment_fails(pool: PgPool) {
+    let repository = EnvironmentRepository::new(Arc::new(pool));
+
+    let response = repository.delete("00000000-0000-0000-0000-000000000002".parse().unwrap()).await;
+
+    assert!(response.is_err());
+    assert_eq!(response.unwrap_err().to_string(), "Environment not found");
+}
+
 // TODO: test_environment_repository_find_with_limit_pagination
 // TODO: test_environment_repository_find_with_offset_pagination
 // TODO: test_environment_repository_find_with_limit_offset_pagination
