@@ -26,7 +26,7 @@ async fn test_environment_repository_create_with_valid_data_succeeds(pool: PgPoo
     let result = response.unwrap();
     assert_eq!(result.name, "test");
     assert_eq!(result.description, "test");
-    assert_eq!(result.enabled, true);
+    assert!(result.enabled);
 }
 
 #[sqlx::test]
@@ -82,7 +82,7 @@ async fn test_environment_repository_read_existing_account_succeeds(pool: PgPool
     let environment = environment.unwrap();
     assert_eq!(environment.name, "dev");
     assert_eq!(environment.description, "Development environment");
-    assert_eq!(environment.enabled, true);
+    assert!(environment.enabled);
 }
 
 #[sqlx::test]
@@ -157,7 +157,7 @@ async fn test_environment_repository_update_enabled_to_false_succeeds(pool: PgPo
     assert!(response.is_ok());
     let environment = response.unwrap();
 
-    assert_eq!(environment.enabled, false);
+    assert!(!environment.enabled);
 }
 
 #[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/environments.sql"))]
@@ -178,7 +178,7 @@ async fn test_environment_repository_update_enabled_to_true_succeeds(pool: PgPoo
     assert!(response.is_ok());
     let environment = response.unwrap();
 
-    assert_eq!(environment.enabled, true);
+    assert!(environment.enabled);
 }
 
 #[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/environments.sql"))]
