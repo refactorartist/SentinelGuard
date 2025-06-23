@@ -22,7 +22,24 @@ async fn test_environment_repository_create_with_valid_data_succeeds(pool: PgPoo
     assert_eq!(result.enabled, true);
 }
 
-// TODO: test_environment_repository_create_with_missing_project_id_fails
+#[sqlx::test]
+async fn test_environment_repository_create_with_missing_project_id_fails(pool: PgPool) {
+    let repository = EnvironmentRepository::new(Arc::new(pool));
+
+    let payload = EnvironmentCreatePayload {
+        project_id: "123e4567-e89b-12d3-a456-426614174000".to_string(),
+        name: "test".to_string(),
+        description: "test".to_string(),
+        enabled: true,
+    };
+
+    let response = repository.create(payload).await;
+
+    assert!(response.is_err());
+    assert_eq!(response.unwrap_err().to_string(), "Project not found");
+}
+
+
 // TODO: test_environment_repository_create_with_duplicate_project_id_scope_fails
 // TODO: test_environment_repository_read_existing_account_succeeds
 // TODO: test_environment_repository_read_nonexistent_account_returns_error
