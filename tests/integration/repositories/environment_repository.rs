@@ -263,7 +263,78 @@ async fn test_environment_repository_find_with_project_id_filter(pool: PgPool) {
     }
 }
 
-// TODO: test_environment_repository_find_with_scope_filter
-// TODO: test_environment_repository_find_with_description_filter
-// TODO: test_environment_repository_find_with_enabled_is_true_filter
-// TODO: test_environment_repository_find_with_enabled_is_false_filter
+// TODO: test_environment_repository_find_with_name_filter
+#[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/environments.sql"))]
+async fn test_environment_repository_find_with_name_filter(pool: PgPool) {
+    let repository = EnvironmentRepository::new(Arc::new(pool));
+
+    let filter = EnvironmentFilter {
+        name: Some("dev".to_string()),
+        ..Default::default()
+    };
+    let sort = None;
+    let pagination = None;
+
+    let environments = repository.find(filter, sort, pagination).await.unwrap();
+
+    for environment in &environments {
+        assert_eq!(environment.name, "dev");
+    }
+}
+
+
+#[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/environments.sql"))]
+async fn test_environment_repository_find_with_description_filter(pool: PgPool) {
+    let repository = EnvironmentRepository::new(Arc::new(pool));
+
+    let filter = EnvironmentFilter {
+        description: Some("Development".to_string()),
+        ..Default::default()
+    };
+    let sort = None;
+    let pagination = None;
+
+    let environments = repository.find(filter, sort, pagination).await.unwrap();
+
+    for environment in &environments {
+        assert!(environment.description.contains("Development"));
+    }
+}
+
+
+#[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/environments.sql"))]
+async fn test_environment_repository_find_with_enabled_is_true_filter(pool: PgPool) {
+    let repository = EnvironmentRepository::new(Arc::new(pool));
+
+    let filter = EnvironmentFilter {
+        enabled: Some(true),
+        ..Default::default()
+    };
+    let sort = None;
+    let pagination = None;
+
+    let environments = repository.find(filter, sort, pagination).await.unwrap();
+
+    for environment in &environments {
+        assert!(environment.enabled);
+    }
+}
+
+#[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/environments.sql"))]
+async fn test_environment_repository_find_with_enabled_is_false_filter(pool: PgPool) {
+    let repository = EnvironmentRepository::new(Arc::new(pool));
+
+    let filter = EnvironmentFilter {
+        enabled: Some(false),
+        ..Default::default()
+    };
+    let sort = None;
+    let pagination = None;
+
+    let environments = repository.find(filter, sort, pagination).await.unwrap();
+
+    for environment in &environments {
+        assert!(!environment.enabled);
+    }
+}
+
