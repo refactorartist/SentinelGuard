@@ -2,6 +2,7 @@ use std::sync::Arc;
 
 use sentinel_guard::{models::{environment::{EnvironmentCreatePayload, EnvironmentFilter, EnvironmentUpdatePayload}, pagination::Pagination}, repositories::{base::Repository, environment_repository::EnvironmentRepository}};
 use sqlx::PgPool;
+use uuid::Uuid;
 
 #[sqlx::test(fixtures("../fixtures/projects.sql"))]
 async fn test_environment_repository_create_with_valid_data_succeeds(pool: PgPool) {
@@ -241,8 +242,27 @@ async fn test_environment_repository_find_with_offset_pagination(pool: PgPool) {
     assert_ne!(first_environments[0].id, second_environments[0].id);
 }
 
-// TODO: test_environment_repository_find_with_limit_offset_pagination
 // TODO: test_environment_repository_find_with_project_id_filter
+#[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/environments.sql"))]
+async fn test_environment_repository_find_with_project_id_filter(pool: PgPool) {
+    let repository = EnvironmentRepository::new(Arc::new(pool));
+
+    let project_id = Uuid::parse_str("123e4567-e89b-12d3-a456-426614174000").unwrap();
+
+    let filter = EnvironmentFilter {
+        project_id: Some(project_id.to_string()),
+        ..Default::default()
+    };
+    let sort = None;
+    let pagination = None;
+
+    let environments = repository.find(filter, sort, pagination).await.unwrap();
+
+    for environment in &environments {
+        assert_eq!(environment.project_id, project_id);
+    }
+}
+
 // TODO: test_environment_repository_find_with_scope_filter
 // TODO: test_environment_repository_find_with_description_filter
 // TODO: test_environment_repository_find_with_enabled_is_true_filter
