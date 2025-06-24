@@ -260,7 +260,7 @@ impl Repository<ProjectAccess> for ProjectAccessRepository {
             } else {
                 query.push(" AND ");
             }
-            let project_id = uuid::Uuid::parse_str(&project_id).unwrap();
+            let project_id = uuid::Uuid::parse_str(project_id).unwrap();
 
             query.push(" project_id = ").push_bind(project_id);
         }
@@ -271,7 +271,7 @@ impl Repository<ProjectAccess> for ProjectAccessRepository {
             } else {
                 query.push(" AND ");
             }
-            let service_account_id = uuid::Uuid::parse_str(&service_account_id).unwrap();
+            let service_account_id = uuid::Uuid::parse_str(service_account_id).unwrap();
 
             query
                 .push(" service_account_id = ")
@@ -287,7 +287,7 @@ impl Repository<ProjectAccess> for ProjectAccessRepository {
             } else {
                 query.push(" AND ");
             }
-            let environment_id = uuid::Uuid::parse_str(&environment_id).unwrap();
+            let environment_id = uuid::Uuid::parse_str(environment_id).unwrap();
 
             query.push(" environment_id = ").push_bind(environment_id);
         }
