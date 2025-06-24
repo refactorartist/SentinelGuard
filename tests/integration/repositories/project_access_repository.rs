@@ -26,9 +26,18 @@ async fn test_project_access_repository_create_with_valid_data_succeeds(pool: Pg
         enabled: true,
     };
     let project_access = repository.create(payload.clone()).await.unwrap();
-    assert_eq!(project_access.project_id, Uuid::parse_str("123e4567-e89b-12d3-a456-426614174000").unwrap());
-    assert_eq!(project_access.service_account_id, Uuid::parse_str("123e4567-e89b-12d3-a456-426614174000").unwrap());
-    assert_eq!(project_access.environment_id, Uuid::parse_str("00000000-0000-0000-0000-000000000001").unwrap());
+    assert_eq!(
+        project_access.project_id,
+        Uuid::parse_str("123e4567-e89b-12d3-a456-426614174000").unwrap()
+    );
+    assert_eq!(
+        project_access.service_account_id,
+        Uuid::parse_str("123e4567-e89b-12d3-a456-426614174000").unwrap()
+    );
+    assert_eq!(
+        project_access.environment_id,
+        Uuid::parse_str("00000000-0000-0000-0000-000000000001").unwrap()
+    );
     assert!(project_access.enabled);
 }
 
@@ -64,7 +73,10 @@ async fn test_project_access_repository_create_with_duplicate_fails(pool: PgPool
     let result = repository.create(payload).await;
     assert!(result.is_err());
     let error_message = result.unwrap_err().to_string();
-    assert_eq!(error_message, "Project Id, Service Account Id and Environment Id combination already exists");
+    assert_eq!(
+        error_message,
+        "Project Id, Service Account Id and Environment Id combination already exists"
+    );
 }
 
 #[sqlx::test(fixtures(
@@ -80,7 +92,10 @@ async fn test_project_access_repository_read_existing_succeeds(pool: PgPool) {
     assert!(project_access.is_some());
     let project_access = project_access.unwrap();
     assert_eq!(project_access.id, Some(id));
-    assert_eq!(project_access.project_id, Uuid::parse_str("123e4567-e89b-12d3-a456-426614174000").unwrap());
+    assert_eq!(
+        project_access.project_id,
+        Uuid::parse_str("123e4567-e89b-12d3-a456-426614174000").unwrap()
+    );
 }
 
 #[sqlx::test]

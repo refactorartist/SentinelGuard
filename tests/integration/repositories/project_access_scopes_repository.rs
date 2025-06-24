@@ -4,12 +4,12 @@ use sentinel_guard::{
     models::{
         pagination::Pagination,
         project_access_scopes::{
-            ProjectAccessScopeCreatePayload, ProjectAccessScopeFilter, ProjectAccessScopeUpdatePayload,
+            ProjectAccessScopeCreatePayload, ProjectAccessScopeFilter,
+            ProjectAccessScopeUpdatePayload,
         },
     },
     repositories::{
-        base::Repository,
-        project_access_scopes_repository::ProjectAccessScopesRepository,
+        base::Repository, project_access_scopes_repository::ProjectAccessScopesRepository,
     },
 };
 use sqlx::PgPool;
@@ -23,13 +23,21 @@ async fn test_project_access_scopes_repository_create_with_valid_data_succeeds(p
         scope_id: "00000000-0000-0000-0000-000000000002".to_string(),
     };
     let scope = repository.create(payload.clone()).await.unwrap();
-    assert_eq!(scope.project_access_id, Uuid::parse_str("00000000-0000-0000-0000-000000000102").unwrap());
-    assert_eq!(scope.scope_id, Uuid::parse_str("00000000-0000-0000-0000-000000000002").unwrap());
+    assert_eq!(
+        scope.project_access_id,
+        Uuid::parse_str("00000000-0000-0000-0000-000000000102").unwrap()
+    );
+    assert_eq!(
+        scope.scope_id,
+        Uuid::parse_str("00000000-0000-0000-0000-000000000002").unwrap()
+    );
     assert!(scope.enabled);
 }
 
 #[sqlx::test(fixtures("../fixtures/project_access_scopes.sql"))]
-async fn test_project_access_scopes_repository_create_with_missing_project_access_id_fails(pool: PgPool) {
+async fn test_project_access_scopes_repository_create_with_missing_project_access_id_fails(
+    pool: PgPool,
+) {
     let repository = ProjectAccessScopesRepository::new(Arc::new(pool));
     let payload = ProjectAccessScopeCreatePayload {
         project_access_id: Uuid::new_v4().to_string(),
@@ -49,7 +57,10 @@ async fn test_project_access_scopes_repository_create_with_duplicate_fails(pool:
     let result = repository.create(payload).await;
     assert!(result.is_err());
     let error_message = result.unwrap_err().to_string();
-    assert_eq!(error_message, "Project Access Id and Scope Id combination already exists");
+    assert_eq!(
+        error_message,
+        "Project Access Id and Scope Id combination already exists"
+    );
 }
 
 #[sqlx::test(fixtures("../fixtures/project_access_scopes.sql"))]
@@ -60,7 +71,10 @@ async fn test_project_access_scopes_repository_read_existing_succeeds(pool: PgPo
     assert!(scope.is_some());
     let scope = scope.unwrap();
     assert_eq!(scope.id, Some(id));
-    assert_eq!(scope.project_access_id, Uuid::parse_str("00000000-0000-0000-0000-000000000101").unwrap());
+    assert_eq!(
+        scope.project_access_id,
+        Uuid::parse_str("00000000-0000-0000-0000-000000000101").unwrap()
+    );
 }
 
 #[sqlx::test(fixtures("../fixtures/project_access_scopes.sql"))]
@@ -176,4 +190,4 @@ async fn test_project_access_scopes_find_with_scope_id_filter(pool: PgPool) {
     let pagination = None;
     let scopes = repository.find(filter, sort, pagination).await.unwrap();
     assert_eq!(scopes.len(), 1);
-} 
+}

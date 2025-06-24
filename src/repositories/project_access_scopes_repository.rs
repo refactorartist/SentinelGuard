@@ -10,8 +10,8 @@ use crate::{
     models::{
         pagination::Pagination,
         project_access_scopes::{
-            ProjectAccessScope, ProjectAccessScopeCreatePayload, ProjectAccessScopeFilter, ProjectAccessScopeSortOrder,
-            ProjectAccessScopeUpdatePayload,
+            ProjectAccessScope, ProjectAccessScopeCreatePayload, ProjectAccessScopeFilter,
+            ProjectAccessScopeSortOrder, ProjectAccessScopeUpdatePayload,
         },
     },
     repositories::base::Repository,
@@ -64,12 +64,16 @@ impl Repository<ProjectAccessScope> for ProjectAccessScopesRepository {
                     match error_message {
                         s if s.contains("unique constraint") || s.contains("duplicate key") => {
                             if s.contains("idx_project_access_scopes_project_access_id_scope_id") {
-                                Err(Error::msg("Project Access Id and Scope Id combination already exists"))
+                                Err(Error::msg(
+                                    "Project Access Id and Scope Id combination already exists",
+                                ))
                             } else {
                                 Err(Error::msg("No changes were made"))
                             }
                         }
-                        s if s.contains("foreign key") => Err(Error::msg("Foreign key constraint failed")),
+                        s if s.contains("foreign key") => {
+                            Err(Error::msg("Foreign key constraint failed"))
+                        }
                         _ => Err(Error::msg("No changes were made")),
                     }
                 }
@@ -95,7 +99,11 @@ impl Repository<ProjectAccessScope> for ProjectAccessScopesRepository {
         Ok(scope)
     }
 
-    async fn update(&self, id: Uuid, update: Self::UpdatePayload) -> Result<ProjectAccessScope, Error> {
+    async fn update(
+        &self,
+        id: Uuid,
+        update: Self::UpdatePayload,
+    ) -> Result<ProjectAccessScope, Error> {
         let mut changes = Vec::new();
 
         if let Some(enabled) = update.enabled {
@@ -115,7 +123,9 @@ impl Repository<ProjectAccessScope> for ProjectAccessScopesRepository {
             if value.is_empty() {
                 separated.push(field);
             } else {
-                separated.push(format!("{} = ", field)).push_bind_unseparated(value);
+                separated
+                    .push(format!("{} = ", field))
+                    .push_bind_unseparated(value);
             }
         }
         query.push(", updated_at = ").push_bind(Utc::now());
@@ -144,12 +154,16 @@ impl Repository<ProjectAccessScope> for ProjectAccessScopesRepository {
                     match error_message {
                         s if s.contains("unique constraint") || s.contains("duplicate key") => {
                             if s.contains("idx_project_access_scopes_project_access_id_scope_id") {
-                                Err(Error::msg("Project Access Id and Scope Id combination already exists"))
+                                Err(Error::msg(
+                                    "Project Access Id and Scope Id combination already exists",
+                                ))
                             } else {
                                 Err(Error::msg("No changes were made"))
                             }
                         }
-                        s if s.contains("foreign key") => Err(Error::msg("Foreign key constraint failed")),
+                        s if s.contains("foreign key") => {
+                            Err(Error::msg("Foreign key constraint failed"))
+                        }
                         _ => Err(Error::msg("No changes were made")),
                     }
                 }
@@ -159,10 +173,13 @@ impl Repository<ProjectAccessScope> for ProjectAccessScopesRepository {
     }
 
     async fn delete(&self, id: Uuid) -> Result<bool, Error> {
-        let deleted = sqlx::query!("DELETE FROM project_access_scopes WHERE id = $1 RETURNING id", id,)
-            .fetch_optional(&*self.pool)
-            .await
-            .map_err(<sqlx::Error as Into<Error>>::into)?;
+        let deleted = sqlx::query!(
+            "DELETE FROM project_access_scopes WHERE id = $1 RETURNING id",
+            id,
+        )
+        .fetch_optional(&*self.pool)
+        .await
+        .map_err(<sqlx::Error as Into<Error>>::into)?;
 
         if deleted.is_none() {
             return Err(Error::msg("Project access scope not found"));
@@ -236,4 +253,4 @@ impl Repository<ProjectAccessScope> for ProjectAccessScopesRepository {
 
         Ok(scopes)
     }
-} 
+}

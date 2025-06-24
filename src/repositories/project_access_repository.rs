@@ -59,12 +59,13 @@ impl Repository<ProjectAccess> for ProjectAccessRepository {
 
         match created_project_access {
             Ok(project_access) => Ok(project_access),
-            Err(error) => match error {
-                sqlx::Error::RowNotFound => Err(Error::msg("Project access not found")),
-                sqlx::Error::Database(e) => {
-                    let error_message = e.message();
+            Err(error) => {
+                match error {
+                    sqlx::Error::RowNotFound => Err(Error::msg("Project access not found")),
+                    sqlx::Error::Database(e) => {
+                        let error_message = e.message();
 
-                    match error_message {
+                        match error_message {
                         s if s.contains("unique constraint") || s.contains("duplicate key") => {
                             if s.contains("idx_project_access_project_id_service_account_id_environment_id") {
                                 Err(Error::msg("Project Id, Service Account Id and Environment Id combination already exists"))
@@ -89,9 +90,10 @@ impl Repository<ProjectAccess> for ProjectAccessRepository {
                         }
                         _ => Err(Error::msg("No changes were made")),
                     }
+                    }
+                    _ => Err(error.into()),
                 }
-                _ => Err(error.into()),
-            },
+            }
         }
     }
 
@@ -170,12 +172,13 @@ impl Repository<ProjectAccess> for ProjectAccessRepository {
 
         match result {
             Ok(project_scope) => Ok(project_scope),
-            Err(error) => match error {
-                sqlx::Error::RowNotFound => Err(Error::msg("Project access not found")),
-                sqlx::Error::Database(e) => {
-                    let error_message = e.message();
+            Err(error) => {
+                match error {
+                    sqlx::Error::RowNotFound => Err(Error::msg("Project access not found")),
+                    sqlx::Error::Database(e) => {
+                        let error_message = e.message();
 
-                    match error_message {
+                        match error_message {
                         s if s.contains("unique constraint") || s.contains("duplicate key") => {
                              if s.contains("idx_project_access_project_id_service_account_id_environment_id") {
                                 Err(Error::msg("Project Id, Service Account Id and Environment Id combination already exists"))
@@ -200,9 +203,10 @@ impl Repository<ProjectAccess> for ProjectAccessRepository {
                         }
                         _ => Err(Error::msg("No changes were made")),
                     }
+                    }
+                    _ => Err(error.into()),
                 }
-                _ => Err(error.into()),
-            },
+            }
         }
     }
 
@@ -269,11 +273,16 @@ impl Repository<ProjectAccess> for ProjectAccessRepository {
             }
             let service_account_id = uuid::Uuid::parse_str(&service_account_id).unwrap();
 
-            query.push(" service_account_id = ").push_bind(service_account_id);
+            query
+                .push(" service_account_id = ")
+                .push_bind(service_account_id);
         }
 
         if let Some(environment_id) = &filter.environment_id {
-            if conditions_list.is_empty() && filter.project_id.is_none() && filter.service_account_id.is_none() {
+            if conditions_list.is_empty()
+                && filter.project_id.is_none()
+                && filter.service_account_id.is_none()
+            {
                 query.push("WHERE ");
             } else {
                 query.push(" AND ");
