@@ -15,7 +15,7 @@ CREATE UNIQUE INDEX idx_project_access_project_id_service_account_id_environment
 CREATE TABLE project_access_scopes (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     project_access_id UUID NOT NULL REFERENCES project_access(id),
-    scope_id UUID NOT NULL REFERENCES scope(id),
+    scope_id UUID NOT NULL REFERENCES project_scopes(id),
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
