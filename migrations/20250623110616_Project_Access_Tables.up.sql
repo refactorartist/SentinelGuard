@@ -5,8 +5,8 @@ CREATE TABLE project_access (
     service_account_id UUID NOT NULL REFERENCES service_account(id),
     environment_id UUID NOT NULL REFERENCES environment(id),
     enabled BOOLEAN NOT NULL DEFAULT true,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE UNIQUE INDEX idx_project_access_project_id_service_account_id_environment_id ON project_access (project_id, service_account_id, environment_id);
