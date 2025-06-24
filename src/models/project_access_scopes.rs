@@ -11,6 +11,7 @@ pub struct ProjectAccessScope {
     pub id: Option<Uuid>,
     pub project_access_id: Uuid,
     pub scope_id: Uuid,
+    pub enabled: bool,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
 }
@@ -23,6 +24,8 @@ pub struct ProjectAccessScopeResponse {
     pub project_access_id: String,
     #[schema(example = "123e4567-e89b-12d3-a456-426614174000")]
     pub scope_id: String,
+    #[schema(example = "true")]
+    pub enabled: bool,
     #[schema(example = "2025-06-16T03:48:22.000Z")]
     pub created_at: String,
     #[schema(example = "2025-06-16T03:48:22.000Z")]
@@ -35,6 +38,7 @@ impl From<ProjectAccessScope> for ProjectAccessScopeResponse {
             id: value.id.unwrap().to_string(),
             project_access_id: value.project_access_id.to_string(),
             scope_id: value.scope_id.to_string(),
+            enabled: value.enabled,
             created_at: value.created_at.to_string(),
             updated_at: value.updated_at.to_string(),
         }
@@ -51,6 +55,11 @@ pub struct ProjectAccessScopeFilter {
 pub struct ProjectAccessScopeCreatePayload {
     pub project_access_id: String,
     pub scope_id: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, ToSchema)]
+pub struct ProjectAccessScopeUpdatePayload {
+    pub enabled: Option<bool>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]

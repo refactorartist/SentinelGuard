@@ -67,8 +67,6 @@ pub struct ProjectAccessCreatePayload {
 
 #[derive(Debug, Serialize, Deserialize, Clone, ToSchema)]
 pub struct ProjectAccessUpdatePayload {
-    pub service_account_id: Option<String>,
-    pub environment_id: Option<String>,
     pub enabled: Option<bool>,
 }
 
