@@ -4,7 +4,7 @@ use sqlx::PgPool;
 
 use sentinel_guard::{
     models::project_access::{
-        ProjectAccessCreatePayload, ProjectAccessUpdatePayload, ProjectAccessResponse
+        ProjectAccessCreatePayload, ProjectAccessResponse, ProjectAccessUpdatePayload,
     },
     repositories::project_access_repository::ProjectAccessRepository,
     routes::project_access_route,
@@ -117,9 +117,7 @@ async fn test_project_access_route_patch_not_found(pool: PgPool) {
 #[sqlx::test(fixtures("../fixtures/project_access.sql"))]
 async fn test_project_access_route_patch_empty_payload(pool: PgPool) {
     let app = create_test_app!(services(pool), routes());
-    let payload = ProjectAccessUpdatePayload {
-        enabled: None,
-    };
+    let payload = ProjectAccessUpdatePayload { enabled: None };
     let response = actix_web::test::TestRequest::patch()
         .uri("/project-access/00000000-0000-0000-0000-000000000101")
         .set_json(&payload)
@@ -171,4 +169,4 @@ async fn test_project_access_route_list_filter_by_enabled(pool: PgPool) {
     let accesses: Vec<ProjectAccessResponse> = actix_web::test::read_body_json(response).await;
     assert!(!accesses.is_empty());
     assert!(accesses.iter().all(|a| !a.enabled));
-} 
+}
