@@ -163,8 +163,8 @@ mod tests {
     fn test_access_token_to_response() {
         let id = Uuid::new_v4();
         let project_access_id = Uuid::new_v4();
-        let now = Utc.ymd(2025, 6, 25).and_hms(12, 0, 0);
-        let expires = Utc.ymd(2025, 7, 1).and_hms(0, 0, 0);
+        let now = Utc.with_ymd_and_hms(2025, 6, 25, 12, 0, 0).unwrap();
+        let expires = Utc.with_ymd_and_hms(2025, 7, 1, 0, 0, 0).unwrap();
 
         let access_token = AccessToken {
             id: Some(id),
