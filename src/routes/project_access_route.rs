@@ -127,7 +127,7 @@ pub async fn list(
 
 pub fn configure_routes(config: &mut actix_web::web::ServiceConfig) {
     config.service(
-        web::scope("/projects")
+        web::scope("/project-access")
             .service(
                 actix_web::web::resource("")
                     .route(actix_web::web::post().to(post))
