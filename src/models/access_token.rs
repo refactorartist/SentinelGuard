@@ -108,8 +108,8 @@ impl AccessTokenSortOrder {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use uuid::Uuid;
     use chrono::{TimeZone, Utc};
+    use uuid::Uuid;
 
     #[test]
     fn test_access_token_default() {
@@ -130,11 +130,26 @@ mod tests {
     #[test]
     fn test_access_token_sortable_fields_to_string() {
         assert_eq!(String::from(AccessTokenSortableFields::Id), "id");
-        assert_eq!(String::from(AccessTokenSortableFields::ProjectAccessId), "project_access_id");
-        assert_eq!(String::from(AccessTokenSortableFields::Algorithm), "algorithm");
-        assert_eq!(String::from(AccessTokenSortableFields::ExpiresAt), "expires_at");
-        assert_eq!(String::from(AccessTokenSortableFields::CreatedAt), "created_at");
-        assert_eq!(String::from(AccessTokenSortableFields::UpdatedAt), "updated_at");
+        assert_eq!(
+            String::from(AccessTokenSortableFields::ProjectAccessId),
+            "project_access_id"
+        );
+        assert_eq!(
+            String::from(AccessTokenSortableFields::Algorithm),
+            "algorithm"
+        );
+        assert_eq!(
+            String::from(AccessTokenSortableFields::ExpiresAt),
+            "expires_at"
+        );
+        assert_eq!(
+            String::from(AccessTokenSortableFields::CreatedAt),
+            "created_at"
+        );
+        assert_eq!(
+            String::from(AccessTokenSortableFields::UpdatedAt),
+            "updated_at"
+        );
     }
 
     #[test]
