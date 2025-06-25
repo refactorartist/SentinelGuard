@@ -1,7 +1,7 @@
 -- Add up migration script here
 CREATE TABLE access_tokens (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    project_access_id UUID NOT NULL REFERENCES project_accesses(id),
+    project_access_id UUID NOT NULL REFERENCES project_access(id),
     algorithm TEXT NOT NULL,
     token TEXT NOT NULL,
     expires_at TIMESTAMPTZ NOT NULL,
