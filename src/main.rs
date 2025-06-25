@@ -62,8 +62,10 @@ async fn main() -> Result<(), anyhow::Error> {
         ServiceAccountService::new(ServiceAccountRepository::new(pool.clone()));
     let project_scope_service = ProjectScopeService::new(ProjectScopeRepository::new(pool.clone()));
     let environment_service = EnvironmentService::new(EnvironmentRepository::new(pool.clone()));
-    let project_access_service = ProjectAccessService::new(ProjectAccessRepository::new(pool.clone()));
-    let project_access_scopes_service = ProjectAccessScopesService::new(ProjectAccessScopesRepository::new(pool.clone()));
+    let project_access_service =
+        ProjectAccessService::new(ProjectAccessRepository::new(pool.clone()));
+    let project_access_scopes_service =
+        ProjectAccessScopesService::new(ProjectAccessScopesRepository::new(pool.clone()));
 
     let host = config.host;
     let port = config.port;
