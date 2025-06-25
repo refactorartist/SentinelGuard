@@ -12,31 +12,27 @@ use sentinel_guard::{
 use sqlx::PgPool;
 use uuid::Uuid;
 
-#[sqlx::test(fixtures(
-    "../fixtures/projects.sql",
-    "../fixtures/service_accounts.sql",
-    "../fixtures/environments.sql"
-))]
+#[sqlx::test(fixtures("../fixtures/project_access.sql"))]
 async fn test_project_access_repository_create_with_valid_data_succeeds(pool: PgPool) {
     let repository = ProjectAccessRepository::new(Arc::new(pool));
     let payload = ProjectAccessCreatePayload {
-        project_id: "123e4567-e89b-12d3-a456-426614174000".to_string(),
-        service_account_id: "123e4567-e89b-12d3-a456-426614174000".to_string(),
-        environment_id: "00000000-0000-0000-0000-000000000001".to_string(),
+        project_id: "123e4567-e89b-12d3-a456-426614179999".to_string(),
+        service_account_id: "123e4567-e89b-12d3-a456-426614179998".to_string(),
+        environment_id: "00000000-0000-0000-0000-000000009999".to_string(),
         enabled: true,
     };
     let project_access = repository.create(payload.clone()).await.unwrap();
     assert_eq!(
         project_access.project_id,
-        Uuid::parse_str("123e4567-e89b-12d3-a456-426614174000").unwrap()
+        Uuid::parse_str("123e4567-e89b-12d3-a456-426614179999").unwrap()
     );
     assert_eq!(
         project_access.service_account_id,
-        Uuid::parse_str("123e4567-e89b-12d3-a456-426614174000").unwrap()
+        Uuid::parse_str("123e4567-e89b-12d3-a456-426614179998").unwrap()
     );
     assert_eq!(
         project_access.environment_id,
-        Uuid::parse_str("00000000-0000-0000-0000-000000000001").unwrap()
+        Uuid::parse_str("00000000-0000-0000-0000-000000009999").unwrap()
     );
     assert!(project_access.enabled);
 }
@@ -56,12 +52,7 @@ async fn test_project_access_repository_create_with_missing_project_id_fails(poo
     assert_eq!(error_message, "Project not found");
 }
 
-#[sqlx::test(fixtures(
-    "../fixtures/projects.sql",
-    "../fixtures/service_accounts.sql",
-    "../fixtures/environments.sql",
-    "../fixtures/project_access.sql"
-))]
+#[sqlx::test(fixtures("../fixtures/project_access.sql"))]
 async fn test_project_access_repository_create_with_duplicate_fails(pool: PgPool) {
     let repository = ProjectAccessRepository::new(Arc::new(pool));
     let payload = ProjectAccessCreatePayload {
@@ -79,12 +70,7 @@ async fn test_project_access_repository_create_with_duplicate_fails(pool: PgPool
     );
 }
 
-#[sqlx::test(fixtures(
-    "../fixtures/projects.sql",
-    "../fixtures/service_accounts.sql",
-    "../fixtures/environments.sql",
-    "../fixtures/project_access.sql"
-))]
+#[sqlx::test(fixtures("../fixtures/project_access.sql"))]
 async fn test_project_access_repository_read_existing_succeeds(pool: PgPool) {
     let repository = ProjectAccessRepository::new(Arc::new(pool));
     let id = Uuid::parse_str("00000000-0000-0000-0000-000000000101").unwrap();
@@ -108,12 +94,7 @@ async fn test_project_access_repository_read_nonexistent_returns_error(pool: PgP
     assert_eq!(error_message, "Project access not found");
 }
 
-#[sqlx::test(fixtures(
-    "../fixtures/projects.sql",
-    "../fixtures/service_accounts.sql",
-    "../fixtures/environments.sql",
-    "../fixtures/project_access.sql"
-))]
+#[sqlx::test(fixtures("../fixtures/project_access.sql"))]
 async fn test_project_access_repository_update_enabled_false_succeeds(pool: PgPool) {
     let repository = ProjectAccessRepository::new(Arc::new(pool));
     let id = Uuid::parse_str("00000000-0000-0000-0000-000000000101").unwrap();
@@ -124,12 +105,7 @@ async fn test_project_access_repository_update_enabled_false_succeeds(pool: PgPo
     assert!(!project_access.enabled);
 }
 
-#[sqlx::test(fixtures(
-    "../fixtures/projects.sql",
-    "../fixtures/service_accounts.sql",
-    "../fixtures/environments.sql",
-    "../fixtures/project_access.sql"
-))]
+#[sqlx::test(fixtures("../fixtures/project_access.sql"))]
 async fn test_project_access_repository_update_enabled_true_succeeds(pool: PgPool) {
     let repository = ProjectAccessRepository::new(Arc::new(pool));
     let id = Uuid::parse_str("00000000-0000-0000-0000-000000000102").unwrap();
@@ -140,12 +116,7 @@ async fn test_project_access_repository_update_enabled_true_succeeds(pool: PgPoo
     assert!(project_access.enabled);
 }
 
-#[sqlx::test(fixtures(
-    "../fixtures/projects.sql",
-    "../fixtures/service_accounts.sql",
-    "../fixtures/environments.sql",
-    "../fixtures/project_access.sql"
-))]
+#[sqlx::test(fixtures("../fixtures/project_access.sql"))]
 async fn test_project_access_delete_existing_succeeds(pool: PgPool) {
     let repository = ProjectAccessRepository::new(Arc::new(pool));
     let id = Uuid::parse_str("00000000-0000-0000-0000-000000000101").unwrap();
@@ -163,12 +134,7 @@ async fn test_project_access_delete_nonexisting_fails(pool: PgPool) {
     assert_eq!(error_message, "Project access not found");
 }
 
-#[sqlx::test(fixtures(
-    "../fixtures/projects.sql",
-    "../fixtures/service_accounts.sql",
-    "../fixtures/environments.sql",
-    "../fixtures/project_access.sql"
-))]
+#[sqlx::test(fixtures("../fixtures/project_access.sql"))]
 async fn test_project_access_find_with_limit_pagination(pool: PgPool) {
     let repository = ProjectAccessRepository::new(Arc::new(pool));
     let filter = ProjectAccessFilter::default();
@@ -181,12 +147,7 @@ async fn test_project_access_find_with_limit_pagination(pool: PgPool) {
     assert_eq!(project_accesses.len(), 2);
 }
 
-#[sqlx::test(fixtures(
-    "../fixtures/projects.sql",
-    "../fixtures/service_accounts.sql",
-    "../fixtures/environments.sql",
-    "../fixtures/project_access.sql"
-))]
+#[sqlx::test(fixtures("../fixtures/project_access.sql"))]
 async fn test_project_access_find_with_offset_pagination(pool: PgPool) {
     let repository = ProjectAccessRepository::new(Arc::new(pool));
     let filter = ProjectAccessFilter::default();
@@ -199,12 +160,7 @@ async fn test_project_access_find_with_offset_pagination(pool: PgPool) {
     assert_eq!(project_accesses.len(), 3);
 }
 
-#[sqlx::test(fixtures(
-    "../fixtures/projects.sql",
-    "../fixtures/service_accounts.sql",
-    "../fixtures/environments.sql",
-    "../fixtures/project_access.sql"
-))]
+#[sqlx::test(fixtures("../fixtures/project_access.sql"))]
 async fn test_project_access_find_with_limit_offset_pagination(pool: PgPool) {
     let repository = ProjectAccessRepository::new(Arc::new(pool));
     let filter = ProjectAccessFilter::default();
@@ -217,12 +173,7 @@ async fn test_project_access_find_with_limit_offset_pagination(pool: PgPool) {
     assert_eq!(project_accesses.len(), 1);
 }
 
-#[sqlx::test(fixtures(
-    "../fixtures/projects.sql",
-    "../fixtures/service_accounts.sql",
-    "../fixtures/environments.sql",
-    "../fixtures/project_access.sql"
-))]
+#[sqlx::test(fixtures("../fixtures/project_access.sql"))]
 async fn test_project_access_find_with_project_id_filter(pool: PgPool) {
     let repository = ProjectAccessRepository::new(Arc::new(pool));
     let filter = ProjectAccessFilter {
@@ -235,12 +186,7 @@ async fn test_project_access_find_with_project_id_filter(pool: PgPool) {
     assert_eq!(project_accesses.len(), 3);
 }
 
-#[sqlx::test(fixtures(
-    "../fixtures/projects.sql",
-    "../fixtures/service_accounts.sql",
-    "../fixtures/environments.sql",
-    "../fixtures/project_access.sql"
-))]
+#[sqlx::test(fixtures("../fixtures/project_access.sql"))]
 async fn test_project_access_find_with_service_account_id_filter(pool: PgPool) {
     let repository = ProjectAccessRepository::new(Arc::new(pool));
     let filter = ProjectAccessFilter {
@@ -253,12 +199,7 @@ async fn test_project_access_find_with_service_account_id_filter(pool: PgPool) {
     assert_eq!(project_accesses.len(), 1);
 }
 
-#[sqlx::test(fixtures(
-    "../fixtures/projects.sql",
-    "../fixtures/service_accounts.sql",
-    "../fixtures/environments.sql",
-    "../fixtures/project_access.sql"
-))]
+#[sqlx::test(fixtures("../fixtures/project_access.sql"))]
 async fn test_project_access_find_with_environment_id_filter(pool: PgPool) {
     let repository = ProjectAccessRepository::new(Arc::new(pool));
     let filter = ProjectAccessFilter {
@@ -271,12 +212,7 @@ async fn test_project_access_find_with_environment_id_filter(pool: PgPool) {
     assert_eq!(project_accesses.len(), 1);
 }
 
-#[sqlx::test(fixtures(
-    "../fixtures/projects.sql",
-    "../fixtures/service_accounts.sql",
-    "../fixtures/environments.sql",
-    "../fixtures/project_access.sql"
-))]
+#[sqlx::test(fixtures("../fixtures/project_access.sql"))]
 async fn test_project_access_find_with_enabled_filter(pool: PgPool) {
     let repository = ProjectAccessRepository::new(Arc::new(pool));
     let filter = ProjectAccessFilter {

@@ -36,7 +36,11 @@ impl Service<ProjectAccessScope> for ProjectAccessScopesService {
         self.repository.read(id).await
     }
 
-    async fn update(&self, id: Uuid, update: Self::UpdatePayload) -> Result<ProjectAccessScope, Error> {
+    async fn update(
+        &self,
+        id: Uuid,
+        update: Self::UpdatePayload,
+    ) -> Result<ProjectAccessScope, Error> {
         self.repository.update(id, update).await
     }
 

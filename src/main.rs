@@ -13,7 +13,10 @@ use sentinel_guard::services::project_access_service::ProjectAccessService;
 use sentinel_guard::services::project_scope_service::ProjectScopeService;
 use sentinel_guard::services::project_service::ProjectService;
 use sentinel_guard::services::service_account_service::ServiceAccountService;
-use sentinel_guard::{config::AppConfig, routes::project_route, routes::project_scope_route};
+use sentinel_guard::{
+    config::AppConfig, routes::project_access_route, routes::project_access_scopes_route,
+    routes::project_route, routes::project_scope_route,
+};
 use sqlx::postgres::PgPool;
 use std::{sync::Arc, time::Duration};
 use tokio::signal;
@@ -46,6 +49,16 @@ async fn main() -> Result<(), anyhow::Error> {
             environment_route::patch,
             environment_route::delete,
             environment_route::list,
+            project_access_route::post,
+            project_access_route::get,
+            project_access_route::patch,
+            project_access_route::delete,
+            project_access_route::list,
+            project_access_scopes_route::post,
+            project_access_scopes_route::get,
+            project_access_scopes_route::patch,
+            project_access_scopes_route::delete,
+            project_access_scopes_route::list,
         ),
         tags(
             (name = "SentinelGuard", description = "SentinelGuard API documentation.")
@@ -62,8 +75,10 @@ async fn main() -> Result<(), anyhow::Error> {
         ServiceAccountService::new(ServiceAccountRepository::new(pool.clone()));
     let project_scope_service = ProjectScopeService::new(ProjectScopeRepository::new(pool.clone()));
     let environment_service = EnvironmentService::new(EnvironmentRepository::new(pool.clone()));
-    let project_access_service = ProjectAccessService::new(ProjectAccessRepository::new(pool.clone()));
-    let project_access_scopes_service = ProjectAccessScopesService::new(ProjectAccessScopesRepository::new(pool.clone()));
+    let project_access_service =
+        ProjectAccessService::new(ProjectAccessRepository::new(pool.clone()));
+    let project_access_scopes_service =
+        ProjectAccessScopesService::new(ProjectAccessScopesRepository::new(pool.clone()));
 
     let host = config.host;
     let port = config.port;
@@ -79,6 +94,8 @@ async fn main() -> Result<(), anyhow::Error> {
             .configure(service_account_route::configure_routes)
             .configure(project_scope_route::configure_routes)
             .configure(environment_route::configure_routes)
+            .configure(project_access_route::configure_routes)
+            .configure(project_access_scopes_route::configure_routes)
             .service(
                 SwaggerUi::new("/docs/{_:.*}").url("/api-docs/openapi.json", ApiDoc::openapi()),
             )
