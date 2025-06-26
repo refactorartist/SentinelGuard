@@ -1,3 +1,4 @@
+pub mod access_token_repository;
 pub mod environment_repository;
 pub mod project_access_repository;
 pub mod project_access_scopes_repository;
