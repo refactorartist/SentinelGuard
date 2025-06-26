@@ -2,12 +2,10 @@ use std::sync::Arc;
 
 use sentinel_guard::{
     models::{
+        access_token::{AccessTokenCreatePayload, AccessTokenFilter, AccessTokenUpdatePayload},
         pagination::Pagination,
-        access_token::{
-            AccessTokenCreatePayload, AccessTokenFilter, AccessTokenUpdatePayload,
-        },
     },
-    repositories::{base::Repository, access_token_repository::AccessTokenRepository},
+    repositories::{access_token_repository::AccessTokenRepository, base::Repository},
 };
 use sqlx::PgPool;
 use uuid::Uuid;
@@ -21,7 +19,10 @@ async fn test_access_token_repository_create_with_valid_data_succeeds(pool: PgPo
         expires_at: "2031-01-01T00:00:00Z".to_string(),
     };
     let access_token = repository.create(payload.clone()).await.unwrap();
-    assert_eq!(access_token.project_access_id, Uuid::parse_str("00000000-0000-0000-0000-000000000101").unwrap());
+    assert_eq!(
+        access_token.project_access_id,
+        Uuid::parse_str("00000000-0000-0000-0000-000000000101").unwrap()
+    );
     assert_eq!(access_token.algorithm, "HS512");
     assert!(access_token.active);
 }
@@ -74,9 +75,7 @@ async fn test_access_token_repository_update_active_false_succeeds(pool: PgPool)
 async fn test_access_token_repository_update_active_true_succeeds(pool: PgPool) {
     let repository = AccessTokenRepository::new(Arc::new(pool));
     let id = Uuid::parse_str("22222222-2222-2222-2222-222222222222").unwrap();
-    let update = AccessTokenUpdatePayload {
-        active: Some(true),
-    };
+    let update = AccessTokenUpdatePayload { active: Some(true) };
     let access_token = repository.update(id, update).await.unwrap();
     assert!(access_token.active);
 }
@@ -142,7 +141,11 @@ async fn test_access_token_repository_find_with_limit_offset_pagination(pool: Pg
 async fn test_access_token_repository_find_with_project_access_id_filter(pool: PgPool) {
     let repository = AccessTokenRepository::new(Arc::new(pool));
     let filter = AccessTokenFilter {
-        project_access_id: Some(Uuid::parse_str("00000000-0000-0000-0000-000000000101").unwrap().to_string()),
+        project_access_id: Some(
+            Uuid::parse_str("00000000-0000-0000-0000-000000000101")
+                .unwrap()
+                .to_string(),
+        ),
         ..Default::default()
     };
     let sort = None;
@@ -175,4 +178,4 @@ async fn test_access_token_repository_find_with_active_filter(pool: PgPool) {
     let pagination = None;
     let access_tokens = repository.find(filter, sort, pagination).await.unwrap();
     assert_eq!(access_tokens.len(), 4);
-} 
+}

@@ -1,8 +1,8 @@
 use chrono::{DateTime, Utc};
+use jsonwebtoken::Algorithm;
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 use uuid::Uuid;
-use jsonwebtoken::Algorithm;
 
 use crate::models::sort::SortOrder;
 
@@ -23,7 +23,7 @@ pub struct EnvironmentKeyResponse {
     pub id: String,
     #[schema(example = "123e4567-e89b-12d3-a456-426614174000")]
     pub environment_id: String,
-    #[schema(example = "HS256")]    
+    #[schema(example = "HS256")]
     pub algorithm: String,
     #[schema(example = "2025-06-16T03:48:22.000Z")]
     pub created_at: String,
@@ -117,16 +117,32 @@ mod tests {
     #[test]
     fn test_environment_key_sortable_fields_to_string() {
         assert_eq!(String::from(EnvironmentKeySortableFields::Id), "id");
-        assert_eq!(String::from(EnvironmentKeySortableFields::EnvironmentId), "environment_id");
-        assert_eq!(String::from(EnvironmentKeySortableFields::Algorithm), "algorithm");
-        assert_eq!(String::from(EnvironmentKeySortableFields::CreatedAt), "created_at");
-        assert_eq!(String::from(EnvironmentKeySortableFields::UpdatedAt), "updated_at");
+        assert_eq!(
+            String::from(EnvironmentKeySortableFields::EnvironmentId),
+            "environment_id"
+        );
+        assert_eq!(
+            String::from(EnvironmentKeySortableFields::Algorithm),
+            "algorithm"
+        );
+        assert_eq!(
+            String::from(EnvironmentKeySortableFields::CreatedAt),
+            "created_at"
+        );
+        assert_eq!(
+            String::from(EnvironmentKeySortableFields::UpdatedAt),
+            "updated_at"
+        );
     }
 
     #[test]
     fn test_environment_key_sort_order_new() {
-        let sort = EnvironmentKeySortOrder::new(EnvironmentKeySortableFields::Algorithm, SortOrder::Asc);
-        assert!(matches!(sort.field, EnvironmentKeySortableFields::Algorithm));
+        let sort =
+            EnvironmentKeySortOrder::new(EnvironmentKeySortableFields::Algorithm, SortOrder::Asc);
+        assert!(matches!(
+            sort.field,
+            EnvironmentKeySortableFields::Algorithm
+        ));
         assert!(matches!(sort.order, SortOrder::Asc));
     }
-} 
+}
