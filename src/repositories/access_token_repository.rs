@@ -2,14 +2,15 @@ use std::sync::Arc;
 
 use anyhow::Error;
 use async_trait::async_trait;
-use chrono::{Utc, DateTime};
+use chrono::{DateTime, Utc};
 use sqlx::{QueryBuilder, Row};
 use uuid::Uuid;
 
 use crate::{
     models::{
         access_token::{
-            AccessToken, AccessTokenCreatePayload, AccessTokenFilter, AccessTokenSortOrder, AccessTokenUpdatePayload,
+            AccessToken, AccessTokenCreatePayload, AccessTokenFilter, AccessTokenSortOrder,
+            AccessTokenUpdatePayload,
         },
         pagination::Pagination,
     },
@@ -41,7 +42,9 @@ impl Repository<AccessToken> for AccessTokenRepository {
             algorithm: item.algorithm,
             token: "test-token".to_string(),
             active: true,
-            expires_at: DateTime::parse_from_rfc3339(&item.expires_at).unwrap().with_timezone(&Utc),
+            expires_at: DateTime::parse_from_rfc3339(&item.expires_at)
+                .unwrap()
+                .with_timezone(&Utc),
             created_at: Utc::now(),
             updated_at: Utc::now(),
         };
@@ -84,7 +87,6 @@ impl Repository<AccessToken> for AccessTokenRepository {
     async fn update(&self, id: Uuid, update: Self::UpdatePayload) -> Result<AccessToken, Error> {
         let mut changes = Vec::new();
 
-
         if let Some(active) = update.active {
             match active {
                 true => changes.push(("active = true", "".to_string())),
@@ -100,9 +102,11 @@ impl Repository<AccessToken> for AccessTokenRepository {
         let mut separated = query.separated(", ");
         for (field, value) in changes {
             if value.is_empty() {
-                separated.push(format!("{}", field));
+                separated.push(field.to_string());
             } else {
-                separated.push(format!("{} = ", field)).push_bind_unseparated(value);
+                separated
+                    .push(format!("{} = ", field))
+                    .push_bind_unseparated(value);
             }
         }
         query.push(", updated_at = ").push_bind(Utc::now());
@@ -173,9 +177,11 @@ impl Repository<AccessToken> for AccessTokenRepository {
             } else {
                 query.push(" AND ");
             }
-            let project_access_id = uuid::Uuid::parse_str(&project_access_id).unwrap();
+            let project_access_id = uuid::Uuid::parse_str(project_access_id).unwrap();
 
-            query.push(" project_access_id = ").push_bind(project_access_id);
+            query
+                .push(" project_access_id = ")
+                .push_bind(project_access_id);
         }
 
         if let Some(sort) = sort {
@@ -216,4 +222,4 @@ impl Repository<AccessToken> for AccessTokenRepository {
 
         Ok(access_tokens)
     }
-} 
+}

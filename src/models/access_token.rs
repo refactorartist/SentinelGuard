@@ -186,7 +186,7 @@ mod tests {
         assert_eq!(response.algorithm, "HS256");
         assert_eq!(response.token, "sometoken");
         assert_eq!(response.expires_at, expires.to_string());
-        assert_eq!(response.active, true);
+        assert!(response.active);
         assert_eq!(response.created_at, now.to_string());
         assert_eq!(response.updated_at, now.to_string());
     }
