@@ -39,7 +39,7 @@ impl Repository<AccessToken> for AccessTokenRepository {
             id: None,
             project_access_id: item.project_access_id.parse().unwrap(),
             algorithm: item.algorithm,
-            token: "".to_string(),
+            token: "test-token".to_string(),
             active: true,
             expires_at: DateTime::parse_from_rfc3339(&item.expires_at).unwrap().with_timezone(&Utc),
             created_at: Utc::now(),
@@ -48,9 +48,10 @@ impl Repository<AccessToken> for AccessTokenRepository {
 
         let created_access_token = sqlx::query_as!(
             AccessToken,
-            "INSERT INTO access_tokens (project_access_id, algorithm, expires_at, active) VALUES ($1, $2, $3, $4) RETURNING id, project_access_id, algorithm, token, expires_at, active, created_at, updated_at",
+            "INSERT INTO access_tokens (project_access_id, algorithm, token, expires_at, active) VALUES ($1, $2, $3, $4, $5) RETURNING id, project_access_id, algorithm, token, expires_at, active, created_at, updated_at",
             access_token.project_access_id,
             access_token.algorithm,
+            access_token.token,
             access_token.expires_at,
             access_token.active,
         )
@@ -83,11 +84,11 @@ impl Repository<AccessToken> for AccessTokenRepository {
     async fn update(&self, id: Uuid, update: Self::UpdatePayload) -> Result<AccessToken, Error> {
         let mut changes = Vec::new();
 
+
         if let Some(active) = update.active {
-            if active {
-                changes.push(("active = true", ""));
-            } else {
-                changes.push(("active = false", ""));
+            match active {
+                true => changes.push(("active = true", "".to_string())),
+                false => changes.push(("active = false", "".to_string())),
             }
         }
 
@@ -98,7 +99,11 @@ impl Repository<AccessToken> for AccessTokenRepository {
         let mut query = QueryBuilder::new("UPDATE access_tokens SET ");
         let mut separated = query.separated(", ");
         for (field, value) in changes {
-            separated.push(format!("{} = ", field)).push_bind_unseparated(value);
+            if value.is_empty() {
+                separated.push(format!("{}", field));
+            } else {
+                separated.push(format!("{} = ", field)).push_bind_unseparated(value);
+            }
         }
         query.push(", updated_at = ").push_bind(Utc::now());
         query.push(" WHERE id = ").push_bind(id);
@@ -145,14 +150,11 @@ impl Repository<AccessToken> for AccessTokenRepository {
         pagination: Option<Pagination>,
     ) -> Result<Vec<AccessToken>, Error> {
         let mut query = QueryBuilder::new(
-            "SELECT id, project_access_id, algorithm, token, expires_at, created_at, updated_at FROM access_tokens ",
+            "SELECT id, project_access_id, algorithm, token, active, expires_at, created_at, updated_at FROM access_tokens ",
         );
 
         let mut conditions_list: Vec<(&str, String)> = Vec::new();
 
-        if let Some(project_access_id) = &filter.project_access_id {
-            conditions_list.push(("project_access_id = ", project_access_id.clone()));
-        }
         if let Some(algorithm) = &filter.algorithm {
             conditions_list.push(("algorithm = ", algorithm.clone()));
         }
@@ -163,6 +165,17 @@ impl Repository<AccessToken> for AccessTokenRepository {
             for (condition, value) in &conditions_list {
                 conditions.push(condition).push_bind_unseparated(value);
             }
+        }
+
+        if let Some(project_access_id) = &filter.project_access_id {
+            if conditions_list.is_empty() {
+                query.push("WHERE ");
+            } else {
+                query.push(" AND ");
+            }
+            let project_access_id = uuid::Uuid::parse_str(&project_access_id).unwrap();
+
+            query.push(" project_access_id = ").push_bind(project_access_id);
         }
 
         if let Some(sort) = sort {
