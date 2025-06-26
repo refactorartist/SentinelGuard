@@ -13,6 +13,7 @@ pub struct AccessToken {
     pub algorithm: String,
     pub token: String,
     pub expires_at: DateTime<Utc>,
+    pub active: bool,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
 }
@@ -29,6 +30,8 @@ pub struct AccessTokenResponse {
     pub token: String,
     #[schema(example = "2025-07-01T00:00:00.000Z")]
     pub expires_at: String,
+    #[schema(example = "true")]
+    pub active: bool,
     #[schema(example = "2025-06-25T12:00:00.000Z")]
     pub created_at: String,
     #[schema(example = "2025-06-25T12:00:00.000Z")]
@@ -43,6 +46,7 @@ impl From<AccessToken> for AccessTokenResponse {
             algorithm: value.algorithm,
             token: value.token,
             expires_at: value.expires_at.to_string(),
+            active: value.active,
             created_at: value.created_at.to_string(),
             updated_at: value.updated_at.to_string(),
         }
@@ -53,21 +57,19 @@ impl From<AccessToken> for AccessTokenResponse {
 pub struct AccessTokenCreatePayload {
     pub project_access_id: String,
     pub algorithm: String,
-    pub token: String,
     pub expires_at: String,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, ToSchema)]
 pub struct AccessTokenUpdatePayload {
-    pub algorithm: Option<String>,
-    pub token: Option<String>,
-    pub expires_at: Option<String>,
+    pub active: Option<bool>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Default, ToSchema)]
 pub struct AccessTokenFilter {
     pub project_access_id: Option<String>,
     pub algorithm: Option<String>,
+    pub active: Option<bool>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -125,6 +127,7 @@ mod tests {
         let filter = AccessTokenFilter::default();
         assert!(filter.project_access_id.is_none());
         assert!(filter.algorithm.is_none());
+        assert!(filter.active.is_none());
     }
 
     #[test]
@@ -172,6 +175,7 @@ mod tests {
             algorithm: "HS256".to_string(),
             token: "sometoken".to_string(),
             expires_at: expires,
+            active: true,
             created_at: now,
             updated_at: now,
         };
@@ -182,6 +186,7 @@ mod tests {
         assert_eq!(response.algorithm, "HS256");
         assert_eq!(response.token, "sometoken");
         assert_eq!(response.expires_at, expires.to_string());
+        assert_eq!(response.active, true);
         assert_eq!(response.created_at, now.to_string());
         assert_eq!(response.updated_at, now.to_string());
     }
