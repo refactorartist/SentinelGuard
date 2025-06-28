@@ -75,8 +75,10 @@ async fn test_read_environment_key_nonexistent(pool: PgPool) {
 async fn test_update_environment_key_active(pool: PgPool) {
     let repo = EnvironmentKeyRepository::new(Arc::new(pool));
     let update = EnvironmentKeyUpdatePayload { active: Some(false) };
-    let updated = repo.update(Uuid::parse_str("00000000-0000-0000-0000-000000000001").unwrap(), update).await.unwrap();
-    assert_eq!(updated.id.unwrap(), Uuid::parse_str("00000000-0000-0000-0000-000000000001").unwrap());
+    let updated = repo.update(Uuid::parse_str("00000000-0000-0000-0000-000000000002").unwrap(), update).await;
+    assert!(updated.is_ok());
+    let updated = updated.unwrap();
+    assert_eq!(updated.id.unwrap(), Uuid::parse_str("00000000-0000-0000-0000-000000000002").unwrap());
     assert!(!updated.active);
 }
 

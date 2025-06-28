@@ -123,11 +123,12 @@ impl Repository<EnvironmentKey> for EnvironmentKeyRepository {
             }
         }
 
+
         if changes.is_empty() {
             return Err(Error::msg("No changes to update"));
         }
 
-        let mut query = QueryBuilder::new("UPDATE project_access SET ");
+        let mut query = QueryBuilder::new("UPDATE environment_key SET ");
 
         let mut separated = query.separated(", ");
         for (field, value) in changes {
@@ -165,7 +166,6 @@ impl Repository<EnvironmentKey> for EnvironmentKeyRepository {
                     sqlx::Error::RowNotFound => Err(Error::msg("Environment key not found")),
                     sqlx::Error::Database(e) => {
                         let error_message = e.message();
-
                         match error_message {
                         s if s.contains("unique constraint") || s.contains("duplicate key") => {
                              if s.contains("idx_environment_key_environment_id_algorithm") {
