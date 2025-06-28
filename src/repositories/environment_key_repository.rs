@@ -17,20 +17,24 @@ use crate::{
         pagination::Pagination,
     },
     repositories::base::Repository,
+    utils::security::SecretsManager,
 };
 
 use crate::utils::tokens::key_builder::KeyBuilder;
-use base64::engine::Engine;
-use base64::engine::general_purpose::STANDARD;
 
 #[derive(Clone)]
 pub struct EnvironmentKeyRepository {
     pub pool: Arc<sqlx::postgres::PgPool>,
+    pub secrets_manager: SecretsManager,
 }
 
 impl EnvironmentKeyRepository {
     pub fn new(pool: Arc<sqlx::postgres::PgPool>) -> Self {
-        Self { pool }
+        let secrets_manager = SecretsManager::new(true).unwrap();
+        Self {
+            pool,
+            secrets_manager,
+        }
     }
 }
 
@@ -43,16 +47,22 @@ impl Repository<EnvironmentKey> for EnvironmentKeyRepository {
 
     async fn create(&self, item: Self::CreatePayload) -> Result<EnvironmentKey, Error> {
         let algorithm = Algorithm::from_str(&item.algorithm).unwrap();
-        let key = KeyBuilder::new().generate_key_with_length(algorithm, None);
+        let key = KeyBuilder::new().generate_key(algorithm);
         if key.is_err() {
             return Err(Error::msg("Failed to generate key"));
         }
-        let key_base64 = STANDARD.encode(&key.unwrap().private_key);
+        let key = key.unwrap();
+        let resource_id = Uuid::parse_str(&item.environment_id).unwrap();
+        let key_string = String::from_utf8(key.private_key.clone()).unwrap();
+        let key_encrypted = self
+            .secrets_manager
+            .encrypt(&key_string, &resource_id)
+            .unwrap();
         let row = sqlx::query!(
             "INSERT INTO environment_key (environment_id, algorithm, key, active) VALUES ($1, $2, $3, $4) RETURNING id, environment_id, algorithm, key, active, created_at, updated_at",
             Uuid::parse_str(&item.environment_id).unwrap(),
             &format!("{:?}", algorithm),
-            key_base64,
+            key_encrypted,
             &item.active
         )
         .fetch_one(&*self.pool)
