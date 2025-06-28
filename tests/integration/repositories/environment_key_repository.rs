@@ -1,13 +1,14 @@
 use std::sync::Arc;
 
-use sqlx::PgPool;
 use sentinel_guard::models::environment_key::{
-    EnvironmentKeyCreatePayload, EnvironmentKeyUpdatePayload, EnvironmentKeyFilter, EnvironmentKeySortableFields, EnvironmentKeySortOrder
+    EnvironmentKeyCreatePayload, EnvironmentKeyFilter, EnvironmentKeySortOrder,
+    EnvironmentKeySortableFields, EnvironmentKeyUpdatePayload,
 };
 use sentinel_guard::models::sort::SortOrder;
-use sentinel_guard::repositories::environment_key_repository::EnvironmentKeyRepository;
-use uuid::Uuid;
 use sentinel_guard::repositories::base::Repository;
+use sentinel_guard::repositories::environment_key_repository::EnvironmentKeyRepository;
+use sqlx::PgPool;
+use uuid::Uuid;
 
 // CREATE
 #[sqlx::test(fixtures("../fixtures/environment_keys.sql"))]
@@ -19,7 +20,10 @@ async fn test_create_environment_key_valid(pool: PgPool) {
         active: true,
     };
     let created = repo.create(payload).await.unwrap();
-    assert_eq!(created.environment_id, Uuid::parse_str("123e4567-e89b-12d3-a456-426614174000").unwrap());
+    assert_eq!(
+        created.environment_id,
+        Uuid::parse_str("123e4567-e89b-12d3-a456-426614174000").unwrap()
+    );
     assert_eq!(format!("{:?}", created.algorithm), "HS384");
     assert!(created.active);
 }
@@ -35,7 +39,10 @@ async fn test_create_environment_key_duplicate_fails(pool: PgPool) {
     let result = repo.create(payload).await;
     dbg!(&result);
     assert!(result.is_err());
-    assert_eq!(result.unwrap_err().to_string(), "Environment Id and Algorithm combination already exists");
+    assert_eq!(
+        result.unwrap_err().to_string(),
+        "Environment Id and Algorithm combination already exists"
+    );
 }
 
 #[sqlx::test(fixtures("../fixtures/environment_keys.sql"))]
@@ -48,17 +55,26 @@ async fn test_create_environment_key_missing_env_fails(pool: PgPool) {
     };
     let result = repo.create(payload).await;
     assert!(result.is_err());
-    assert_eq!(result.unwrap_err().to_string(), "Foreign key constraint failed");
+    assert_eq!(
+        result.unwrap_err().to_string(),
+        "Foreign key constraint failed"
+    );
 }
 
 // READ
 #[sqlx::test(fixtures("../fixtures/environment_keys.sql"))]
 async fn test_read_environment_key_existing(pool: PgPool) {
     let repo = EnvironmentKeyRepository::new(Arc::new(pool));
-    let key = repo.read(Uuid::parse_str("00000000-0000-0000-0000-000000000001").unwrap()).await.unwrap();
+    let key = repo
+        .read(Uuid::parse_str("00000000-0000-0000-0000-000000000001").unwrap())
+        .await
+        .unwrap();
     assert!(key.is_some());
     let key = key.unwrap();
-    assert_eq!(key.id.unwrap(), Uuid::parse_str("00000000-0000-0000-0000-000000000001").unwrap());
+    assert_eq!(
+        key.id.unwrap(),
+        Uuid::parse_str("00000000-0000-0000-0000-000000000001").unwrap()
+    );
     assert_eq!(format!("{:?}", key.algorithm), "HS256");
 }
 
@@ -74,11 +90,21 @@ async fn test_read_environment_key_nonexistent(pool: PgPool) {
 #[sqlx::test(fixtures("../fixtures/environment_keys.sql"))]
 async fn test_update_environment_key_active(pool: PgPool) {
     let repo = EnvironmentKeyRepository::new(Arc::new(pool));
-    let update = EnvironmentKeyUpdatePayload { active: Some(false) };
-    let updated = repo.update(Uuid::parse_str("00000000-0000-0000-0000-000000000002").unwrap(), update).await;
+    let update = EnvironmentKeyUpdatePayload {
+        active: Some(false),
+    };
+    let updated = repo
+        .update(
+            Uuid::parse_str("00000000-0000-0000-0000-000000000002").unwrap(),
+            update,
+        )
+        .await;
     assert!(updated.is_ok());
     let updated = updated.unwrap();
-    assert_eq!(updated.id.unwrap(), Uuid::parse_str("00000000-0000-0000-0000-000000000002").unwrap());
+    assert_eq!(
+        updated.id.unwrap(),
+        Uuid::parse_str("00000000-0000-0000-0000-000000000002").unwrap()
+    );
     assert!(!updated.active);
 }
 
@@ -86,7 +112,12 @@ async fn test_update_environment_key_active(pool: PgPool) {
 async fn test_update_environment_key_no_changes(pool: PgPool) {
     let repo = EnvironmentKeyRepository::new(Arc::new(pool));
     let update = EnvironmentKeyUpdatePayload { active: None };
-    let result = repo.update(Uuid::parse_str("00000000-0000-0000-0000-000000000001").unwrap(), update).await;
+    let result = repo
+        .update(
+            Uuid::parse_str("00000000-0000-0000-0000-000000000001").unwrap(),
+            update,
+        )
+        .await;
     assert!(result.is_err());
     assert_eq!(result.unwrap_err().to_string(), "No changes to update");
 }
@@ -104,7 +135,10 @@ async fn test_update_environment_key_nonexistent(pool: PgPool) {
 #[sqlx::test(fixtures("../fixtures/environment_keys.sql"))]
 async fn test_delete_environment_key_existing(pool: PgPool) {
     let repo = EnvironmentKeyRepository::new(Arc::new(pool));
-    let deleted = repo.delete(Uuid::parse_str("00000000-0000-0000-0000-000000000002").unwrap()).await.unwrap();
+    let deleted = repo
+        .delete(Uuid::parse_str("00000000-0000-0000-0000-000000000002").unwrap())
+        .await
+        .unwrap();
     assert!(deleted);
 }
 
@@ -125,7 +159,10 @@ async fn test_find_environment_keys_by_env(pool: PgPool) {
         algorithm: None,
         active: None,
     };
-    let sort = Some(vec![EnvironmentKeySortOrder::new(EnvironmentKeySortableFields::Algorithm, SortOrder::Asc)]);
+    let sort = Some(vec![EnvironmentKeySortOrder::new(
+        EnvironmentKeySortableFields::Algorithm,
+        SortOrder::Asc,
+    )]);
     let keys = repo.find(filter, sort, None).await.unwrap();
     assert!(!keys.is_empty());
 }
@@ -136,7 +173,10 @@ async fn test_find_environment_keys_with_pagination(pool: PgPool) {
     let repo = EnvironmentKeyRepository::new(Arc::new(pool));
     let filter = EnvironmentKeyFilter::default();
     let sort = None;
-    let pagination = Some(Pagination { limit: Some(1), offset: Some(0) });
+    let pagination = Some(Pagination {
+        limit: Some(1),
+        offset: Some(0),
+    });
     let keys = repo.find(filter, sort, pagination).await.unwrap();
     assert_eq!(keys.len(), 1);
-} 
+}

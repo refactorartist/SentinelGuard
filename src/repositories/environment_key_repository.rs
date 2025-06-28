@@ -10,17 +10,18 @@ use std::str::FromStr;
 
 use crate::{
     models::{
-        pagination::Pagination,
         environment_key::{
-            EnvironmentKey, EnvironmentKeyCreatePayload, EnvironmentKeyFilter, EnvironmentKeySortOrder, EnvironmentKeyUpdatePayload
+            EnvironmentKey, EnvironmentKeyCreatePayload, EnvironmentKeyFilter,
+            EnvironmentKeySortOrder, EnvironmentKeyUpdatePayload,
         },
+        pagination::Pagination,
     },
     repositories::base::Repository,
 };
 
 use crate::utils::tokens::key_builder::KeyBuilder;
-use base64::engine::general_purpose::STANDARD;
 use base64::engine::Engine;
+use base64::engine::general_purpose::STANDARD;
 
 #[derive(Clone)]
 pub struct EnvironmentKeyRepository {
@@ -66,28 +67,30 @@ impl Repository<EnvironmentKey> for EnvironmentKeyRepository {
                 created_at: row.created_at,
                 updated_at: row.updated_at,
             }),
-            Err(error) => {
-                match error {
-                    sqlx::Error::RowNotFound => Err(Error::msg("Environment key not found")),
-                    sqlx::Error::Database(e) => {
-                        let error_message = e.message();
-                        dbg!(&error_message);
-                        match error_message {
-                            s if s.contains("unique constraint") || s.contains("duplicate key") => {
-                                if s.contains("idx_environment_key_environment_id_algorithm") {
-                                    Err(Error::msg("Environment Id and Algorithm combination already exists"))
-                                } else {
-                                    dbg!(&error_message);
-                                    Err(Error::msg("No changes were made"))
-                                }
+            Err(error) => match error {
+                sqlx::Error::RowNotFound => Err(Error::msg("Environment key not found")),
+                sqlx::Error::Database(e) => {
+                    let error_message = e.message();
+                    dbg!(&error_message);
+                    match error_message {
+                        s if s.contains("unique constraint") || s.contains("duplicate key") => {
+                            if s.contains("idx_environment_key_environment_id_algorithm") {
+                                Err(Error::msg(
+                                    "Environment Id and Algorithm combination already exists",
+                                ))
+                            } else {
+                                dbg!(&error_message);
+                                Err(Error::msg("No changes were made"))
                             }
-                            s if s.contains("foreign key") => Err(Error::msg("Foreign key constraint failed")),
-                            _ => Err(Error::msg("No changes were made")),
                         }
+                        s if s.contains("foreign key") => {
+                            Err(Error::msg("Foreign key constraint failed"))
+                        }
+                        _ => Err(Error::msg("No changes were made")),
                     }
-                    _ => Err(error.into()),
                 }
-            }
+                _ => Err(error.into()),
+            },
         }
     }
 
@@ -123,7 +126,6 @@ impl Repository<EnvironmentKey> for EnvironmentKeyRepository {
             }
         }
 
-
         if changes.is_empty() {
             return Err(Error::msg("No changes to update"));
         }
@@ -143,8 +145,7 @@ impl Repository<EnvironmentKey> for EnvironmentKeyRepository {
 
         query.push(", updated_at = ").push_bind(chrono::Utc::now());
         query.push(" WHERE id = ").push_bind(id);
-        query
-            .push(" RETURNING id, environment_id, algorithm, active, created_at, updated_at");
+        query.push(" RETURNING id, environment_id, algorithm, active, created_at, updated_at");
 
         let result = query
             .build()
@@ -161,33 +162,32 @@ impl Repository<EnvironmentKey> for EnvironmentKeyRepository {
 
         match result {
             Ok(environment_key) => Ok(environment_key),
-            Err(error) => {
-                match error {
-                    sqlx::Error::RowNotFound => Err(Error::msg("Environment key not found")),
-                    sqlx::Error::Database(e) => {
-                        let error_message = e.message();
-                        match error_message {
+            Err(error) => match error {
+                sqlx::Error::RowNotFound => Err(Error::msg("Environment key not found")),
+                sqlx::Error::Database(e) => {
+                    let error_message = e.message();
+                    match error_message {
                         s if s.contains("unique constraint") || s.contains("duplicate key") => {
-                             if s.contains("idx_environment_key_environment_id_algorithm") {
-                                Err(Error::msg("Environment Id and Algorithm combination already exists"))
+                            if s.contains("idx_environment_key_environment_id_algorithm") {
+                                Err(Error::msg(
+                                    "Environment Id and Algorithm combination already exists",
+                                ))
                             } else {
                                 Err(Error::msg("No changes were made"))
                             }
                         }
-                        s if s.contains("foreign key") =>
-                        {
+                        s if s.contains("foreign key") => {
                             if s.contains("environment_key_environment_id_fkey") {
-                                return Err(Error::msg("Environment not found"))
+                                return Err(Error::msg("Environment not found"));
                             }
 
                             Err(Error::msg("No changes were made"))
                         }
                         _ => Err(Error::msg("No changes were made")),
                     }
-                    }
-                    _ => Err(error.into()),
                 }
-            }
+                _ => Err(error.into()),
+            },
         }
     }
 
@@ -231,8 +231,12 @@ impl Repository<EnvironmentKey> for EnvironmentKeyRepository {
             }
         }
         if let Some(pagination) = pagination {
-            query.push(" LIMIT ").push_bind(pagination.limit.unwrap_or(10));
-            query.push(" OFFSET ").push_bind(pagination.offset.unwrap_or(0));
+            query
+                .push(" LIMIT ")
+                .push_bind(pagination.limit.unwrap_or(10));
+            query
+                .push(" OFFSET ")
+                .push_bind(pagination.offset.unwrap_or(0));
         }
         let keys = query
             .build()
@@ -251,4 +255,4 @@ impl Repository<EnvironmentKey> for EnvironmentKeyRepository {
             .collect();
         Ok(keys)
     }
-} 
+}
