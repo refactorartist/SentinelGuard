@@ -1,104 +1,26 @@
-use actix_web::{HttpServer, web};
-use sentinel_guard::repositories::environment_repository::EnvironmentRepository;
-use sentinel_guard::repositories::project_access_repository::ProjectAccessRepository;
-use sentinel_guard::repositories::project_access_scopes_repository::ProjectAccessScopesRepository;
-use sentinel_guard::repositories::project_repository::ProjectRepository;
-use sentinel_guard::repositories::project_scope_repository::ProjectScopeRepository;
-use sentinel_guard::repositories::service_account_repository::ServiceAccountRepository;
-use sentinel_guard::routes::environment_route;
-use sentinel_guard::routes::service_account_route;
-use sentinel_guard::services::environment_service::EnvironmentService;
-use sentinel_guard::services::project_access_scopes_service::ProjectAccessScopesService;
-use sentinel_guard::services::project_access_service::ProjectAccessService;
-use sentinel_guard::services::project_scope_service::ProjectScopeService;
-use sentinel_guard::services::project_service::ProjectService;
-use sentinel_guard::services::service_account_service::ServiceAccountService;
-use sentinel_guard::{
-    config::AppConfig, routes::project_access_route, routes::project_access_scopes_route,
-    routes::project_route, routes::project_scope_route,
-};
+use actix_web::HttpServer;
+use sentinel_guard::config::AppConfig;
+use sentinel_guard::routes::register::register_routes;
+use sentinel_guard::services::register::register_services;
+use sentinel_guard::utils::swagger::get_swagger_ui;
 use sqlx::postgres::PgPool;
 use std::{sync::Arc, time::Duration};
 use tokio::signal;
-use utoipa::OpenApi;
-
-use utoipa_swagger_ui::SwaggerUi;
 
 #[actix_web::main]
 async fn main() -> Result<(), anyhow::Error> {
-    #[derive(OpenApi)]
-    #[openapi(
-        paths(
-            project_route::post,
-            project_route::get,
-            project_route::patch,
-            project_route::delete,
-            project_route::list,
-            service_account_route::post,
-            service_account_route::get,
-            service_account_route::patch,
-            service_account_route::delete,
-            service_account_route::list,
-            project_scope_route::post,
-            project_scope_route::get,
-            project_scope_route::patch,
-            project_scope_route::delete,
-            project_scope_route::list,
-            environment_route::post,
-            environment_route::get,
-            environment_route::patch,
-            environment_route::delete,
-            environment_route::list,
-            project_access_route::post,
-            project_access_route::get,
-            project_access_route::patch,
-            project_access_route::delete,
-            project_access_route::list,
-            project_access_scopes_route::post,
-            project_access_scopes_route::get,
-            project_access_scopes_route::patch,
-            project_access_scopes_route::delete,
-            project_access_scopes_route::list,
-        ),
-        tags(
-            (name = "SentinelGuard", description = "SentinelGuard API documentation.")
-        ),
-    )]
-    struct ApiDoc;
-
     let config = AppConfig::from_env(Some(true))?;
 
     let pool = Arc::new(PgPool::connect(&config.database_uri).await?);
-
-    let project_service = ProjectService::new(ProjectRepository::new(pool.clone()));
-    let service_account_service =
-        ServiceAccountService::new(ServiceAccountRepository::new(pool.clone()));
-    let project_scope_service = ProjectScopeService::new(ProjectScopeRepository::new(pool.clone()));
-    let environment_service = EnvironmentService::new(EnvironmentRepository::new(pool.clone()));
-    let project_access_service =
-        ProjectAccessService::new(ProjectAccessRepository::new(pool.clone()));
-    let project_access_scopes_service =
-        ProjectAccessScopesService::new(ProjectAccessScopesRepository::new(pool.clone()));
-
     let host = config.host;
     let port = config.port;
+
     let server = HttpServer::new(move || {
-        actix_web::App::new()
-            .app_data(web::Data::new(project_service.clone()))
-            .app_data(web::Data::new(service_account_service.clone()))
-            .app_data(web::Data::new(project_scope_service.clone()))
-            .app_data(web::Data::new(environment_service.clone()))
-            .app_data(web::Data::new(project_access_service.clone()))
-            .app_data(web::Data::new(project_access_scopes_service.clone()))
-            .configure(project_route::configure_routes)
-            .configure(service_account_route::configure_routes)
-            .configure(project_scope_route::configure_routes)
-            .configure(environment_route::configure_routes)
-            .configure(project_access_route::configure_routes)
-            .configure(project_access_scopes_route::configure_routes)
-            .service(
-                SwaggerUi::new("/docs/{_:.*}").url("/api-docs/openapi.json", ApiDoc::openapi()),
-            )
+        let app = actix_web::App::new();
+
+        let app = register_services(app, pool.clone());
+        let app = register_routes(app);
+        app.service(get_swagger_ui())
     })
     .bind((host.clone(), port))?
     .shutdown_timeout(30) // 30 seconds graceful shutdown timeout
