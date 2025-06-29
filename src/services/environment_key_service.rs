@@ -1,4 +1,7 @@
-use crate::models::environment_key::{EnvironmentKey, EnvironmentKeyCreatePayload, EnvironmentKeyFilter, EnvironmentKeySortOrder, EnvironmentKeyUpdatePayload};
+use crate::models::environment_key::{
+    EnvironmentKey, EnvironmentKeyCreatePayload, EnvironmentKeyFilter, EnvironmentKeySortOrder,
+    EnvironmentKeyUpdatePayload,
+};
 use crate::models::pagination::Pagination;
 use crate::repositories::base::Repository;
 use crate::repositories::environment_key_repository::EnvironmentKeyRepository;
@@ -25,7 +28,10 @@ impl EnvironmentKeyService {
         environment_id: Uuid,
         algorithm: Algorithm,
     ) -> Result<String, Error> {
-        let key = self.repository.get_environment_key(environment_id, algorithm).await?;
+        let key = self
+            .repository
+            .get_environment_key(environment_id, algorithm)
+            .await?;
         Ok(key)
     }
 }
