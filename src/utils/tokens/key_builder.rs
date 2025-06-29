@@ -223,15 +223,8 @@ impl KeyBuilder {
         let hmac_key = hmac::generate_hmac_key(hash_function, key_len)
             .map_err(|e| Error::msg(format!("Failed to generate HMAC key: {}", e)))?;
 
-        // For HMAC, we only have a single key (symmetric)
-        // Sign an empty message to get the key bytes
-        let test_data = b"";
-        let signature = hmac_key
-            .sign(test_data)
-            .map_err(|e| Error::msg(format!("Failed to sign with HMAC key: {}", e)))?;
-
         Ok(KeyPair {
-            private_key: signature,
+            private_key: hmac_key.key,
             public_key: None,
         })
     }
