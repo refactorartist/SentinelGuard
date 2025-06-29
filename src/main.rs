@@ -1,23 +1,7 @@
-use actix_web::{HttpServer, web};
+use actix_web::HttpServer;
 use sentinel_guard::config::AppConfig;
-use sentinel_guard::repositories::environment_key_repository::EnvironmentKeyRepository;
-use sentinel_guard::repositories::environment_repository::EnvironmentRepository;
-use sentinel_guard::repositories::project_access_repository::ProjectAccessRepository;
-use sentinel_guard::repositories::project_access_scopes_repository::ProjectAccessScopesRepository;
-use sentinel_guard::repositories::project_repository::ProjectRepository;
-use sentinel_guard::repositories::project_scope_repository::ProjectScopeRepository;
-use sentinel_guard::repositories::service_account_repository::ServiceAccountRepository;
-use sentinel_guard::routes::{
-    environment_route, project_access_route, project_access_scopes_route, project_route,
-    project_scope_route, service_account_route,
-};
-use sentinel_guard::services::environment_key_service::EnvironmentKeyService;
-use sentinel_guard::services::environment_service::EnvironmentService;
-use sentinel_guard::services::project_access_scopes_service::ProjectAccessScopesService;
-use sentinel_guard::services::project_access_service::ProjectAccessService;
-use sentinel_guard::services::project_scope_service::ProjectScopeService;
-use sentinel_guard::services::project_service::ProjectService;
-use sentinel_guard::services::service_account_service::ServiceAccountService;
+use sentinel_guard::routes::register::register_routes;
+use sentinel_guard::services::register::register_services;
 use sentinel_guard::utils::swagger::get_swagger_ui;
 use sqlx::postgres::PgPool;
 use std::{sync::Arc, time::Duration};
@@ -32,44 +16,11 @@ async fn main() -> Result<(), anyhow::Error> {
     let port = config.port;
 
     let server = HttpServer::new(move || {
-        let app = actix_web::App::new()
-            .app_data(web::Data::new(ProjectService::new(ProjectRepository::new(
-                pool.clone(),
-            ))))
-            .app_data(web::Data::new(ServiceAccountService::new(
-                ServiceAccountRepository::new(pool.clone()),
-            )))
-            .app_data(web::Data::new(ProjectScopeService::new(
-                ProjectScopeRepository::new(pool.clone()),
-            )))
-            .app_data(web::Data::new(EnvironmentService::new(
-                EnvironmentRepository::new(pool.clone()),
-            )))
-            .app_data(web::Data::new(ProjectAccessService::new(
-                ProjectAccessRepository::new(pool.clone()),
-            )))
-            .app_data(web::Data::new(ProjectAccessScopesService::new(
-                ProjectAccessScopesRepository::new(pool.clone()),
-            )))
-            .app_data(web::Data::new(EnvironmentKeyService::new(
-                EnvironmentKeyRepository::new(pool.clone()),
-            )));
+        let app = actix_web::App::new();
 
-        let routes = [
-            project_route::configure_routes,
-            service_account_route::configure_routes,
-            project_scope_route::configure_routes,
-            environment_route::configure_routes,
-            project_access_route::configure_routes,
-            project_access_scopes_route::configure_routes,
-        ];
-
-        app.configure(|config| {
-            for route in routes {
-                route(config);
-            }
-        })
-        .service(get_swagger_ui())
+        let app = register_services(app, pool.clone());
+        let app = register_routes(app);
+        app.service(get_swagger_ui())
     })
     .bind((host.clone(), port))?
     .shutdown_timeout(30) // 30 seconds graceful shutdown timeout
