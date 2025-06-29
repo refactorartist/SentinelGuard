@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use jsonwebtoken::Algorithm;
 use sentinel_guard::models::environment_key::{
     EnvironmentKeyCreatePayload, EnvironmentKeyFilter, EnvironmentKeySortOrder,
     EnvironmentKeySortableFields, EnvironmentKeyUpdatePayload,
@@ -179,4 +180,42 @@ async fn test_find_environment_keys_with_pagination(pool: PgPool) {
     });
     let keys = repo.find(filter, sort, pagination).await.unwrap();
     assert_eq!(keys.len(), 1);
+}
+
+
+#[sqlx::test(fixtures("../fixtures/environment_keys.sql"))]
+async fn test_get_environment_key_rsa(pool: PgPool) {
+    let repo = EnvironmentKeyRepository::new(Arc::new(pool));
+    let environment_id = uuid::Uuid::parse_str("123e4567-e89b-12d3-a456-426614174000").unwrap();
+    let algorithm = jsonwebtoken::Algorithm::RS512; 
+
+    let _ = repo.create(EnvironmentKeyCreatePayload {
+        environment_id: environment_id.to_string(),
+        algorithm: format!("{:?}", algorithm),
+        active: true,
+    }).await.unwrap();
+
+    let key = repo.get_environment_key(environment_id, algorithm).await.unwrap();
+    let private_key = String::from_utf8_lossy(&key);
+    assert!(private_key.contains("-----BEGIN PRIVATE KEY-----"));
+    assert!(private_key.contains("-----END PRIVATE KEY-----"));
+}
+
+
+#[sqlx::test(fixtures("../fixtures/environment_keys.sql"))]
+async fn test_get_environment_key_ec(pool: PgPool) {
+    let repo = EnvironmentKeyRepository::new(Arc::new(pool));
+    let environment_id = uuid::Uuid::parse_str("123e4567-e89b-12d3-a456-426614174000").unwrap();
+    let algorithm = jsonwebtoken::Algorithm::HS512;
+
+    let _ = repo.create(EnvironmentKeyCreatePayload {
+        environment_id: environment_id.to_string(),
+        algorithm: format!("{:?}", algorithm),
+        active: true,
+    }).await.unwrap();
+
+    let key = repo.get_environment_key(environment_id, algorithm).await.unwrap();
+    let shared_secret = String::from_utf8_lossy(&key);
+    dbg!(&shared_secret);
+    assert!(false);
 }
