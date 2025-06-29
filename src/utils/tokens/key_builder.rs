@@ -140,6 +140,14 @@ pub struct KeyPair {
     /// The public key, if applicable (for asymmetric algorithms like RSA).
     /// This is None for symmetric algorithms like HMAC.
     pub public_key: Option<Vec<u8>>,
+
+    /// The private key in a format appropriate for the algorithm.
+    /// For HMAC, this is the shared secret key.
+    pub private_key_str: String,
+
+    /// The public key, if applicable (for asymmetric algorithms like RSA).
+    /// This is None for symmetric algorithms like HMAC.
+    pub public_key_str: Option<String>,
 }
 
 impl KeyBuilder {
@@ -180,8 +188,10 @@ impl KeyBuilder {
             .context("Failed to encode public key")?;
 
         Ok(KeyPair {
-            private_key: private_pem,
-            public_key: Some(public_pem),
+            private_key: private_pem.clone(),
+            public_key: Some(public_pem.clone()),
+            private_key_str: String::from_utf8(private_pem).unwrap(),
+            public_key_str: Some(String::from_utf8(public_pem).unwrap()),
         })
     }
 
@@ -224,8 +234,10 @@ impl KeyBuilder {
             .map_err(|e| Error::msg(format!("Failed to generate HMAC key: {}", e)))?;
 
         Ok(KeyPair {
-            private_key: hmac_key.key,
+            private_key: hmac_key.key.clone(),
             public_key: None,
+            private_key_str: hex::encode(hmac_key.key),
+            public_key_str: None,
         })
     }
 
@@ -256,8 +268,10 @@ impl KeyBuilder {
             .map_err(|e| Error::msg(format!("Failed to encode public key: {}", e)))?;
 
         Ok(KeyPair {
-            private_key: private_pem,
-            public_key: Some(public_pem),
+            private_key: private_pem.clone(),
+            public_key: Some(public_pem.clone()),
+            private_key_str: String::from_utf8(private_pem).unwrap(),
+            public_key_str: Some(String::from_utf8(public_pem).unwrap()),
         })
     }
 
