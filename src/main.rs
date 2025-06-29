@@ -1,4 +1,5 @@
 use actix_web::{HttpServer, web};
+use sentinel_guard::repositories::environment_key_repository::EnvironmentKeyRepository;
 use sentinel_guard::repositories::environment_repository::EnvironmentRepository;
 use sentinel_guard::repositories::project_access_repository::ProjectAccessRepository;
 use sentinel_guard::repositories::project_access_scopes_repository::ProjectAccessScopesRepository;
@@ -7,6 +8,7 @@ use sentinel_guard::repositories::project_scope_repository::ProjectScopeReposito
 use sentinel_guard::repositories::service_account_repository::ServiceAccountRepository;
 use sentinel_guard::routes::environment_route;
 use sentinel_guard::routes::service_account_route;
+use sentinel_guard::services::environment_key_service::EnvironmentKeyService;
 use sentinel_guard::services::environment_service::EnvironmentService;
 use sentinel_guard::services::project_access_scopes_service::ProjectAccessScopesService;
 use sentinel_guard::services::project_access_service::ProjectAccessService;
@@ -79,6 +81,8 @@ async fn main() -> Result<(), anyhow::Error> {
         ProjectAccessService::new(ProjectAccessRepository::new(pool.clone()));
     let project_access_scopes_service =
         ProjectAccessScopesService::new(ProjectAccessScopesRepository::new(pool.clone()));
+    let environment_key_service =
+        EnvironmentKeyService::new(EnvironmentKeyRepository::new(pool.clone()));
 
     let host = config.host;
     let port = config.port;
@@ -90,6 +94,7 @@ async fn main() -> Result<(), anyhow::Error> {
             .app_data(web::Data::new(environment_service.clone()))
             .app_data(web::Data::new(project_access_service.clone()))
             .app_data(web::Data::new(project_access_scopes_service.clone()))
+            .app_data(web::Data::new(environment_key_service.clone()))
             .configure(project_route::configure_routes)
             .configure(service_account_route::configure_routes)
             .configure(project_scope_route::configure_routes)
