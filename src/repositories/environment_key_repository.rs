@@ -36,6 +36,21 @@ impl EnvironmentKeyRepository {
             secrets_manager,
         }
     }
+
+    pub async fn get_environment_key(self, environment_id: Uuid, algorithm: Algorithm) -> Result<Vec<u8>, Error> {
+        let row = sqlx::query!(
+            "SELECT id, environment_id, algorithm, key, active, created_at, updated_at FROM environment_key WHERE environment_id = $1 AND algorithm = $2 AND active = true LIMIT 1",
+            environment_id,
+            &format!("{:?}", algorithm),
+        )
+        .fetch_optional(&*self.pool)
+        .await
+        .map_err(|_| Error::msg("Database error"))?;
+
+        let row = row.ok_or_else(|| Error::msg("Environment key not found"))?;
+        let key = self.secrets_manager.decrypt(&row.key, &environment_id)?;
+        Ok(key.into_bytes())
+    }
 }
 
 #[async_trait]
