@@ -1,9 +1,10 @@
 -- Add up migration script here
 CREATE TABLE environment_key (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    environment_id UUID NOT NULL REFERENCES environments(id),
+    environment_id UUID NOT NULL REFERENCES environment(id),
     algorithm TEXT NOT NULL,
     key TEXT NOT NULL,
+    active BOOLEAN NOT NULL DEFAULT true,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
 );

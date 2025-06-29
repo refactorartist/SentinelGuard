@@ -13,6 +13,7 @@ pub struct EnvironmentKey {
     pub environment_id: Uuid,
     #[serde(with = "crate::serializers::algorithm")]
     pub algorithm: Algorithm,
+    pub active: bool,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
 }
@@ -25,6 +26,8 @@ pub struct EnvironmentKeyResponse {
     pub environment_id: String,
     #[schema(example = "HS256")]
     pub algorithm: String,
+    #[schema(example = "true")]
+    pub active: bool,
     #[schema(example = "2025-06-16T03:48:22.000Z")]
     pub created_at: String,
     #[schema(example = "2025-06-16T03:48:22.000Z")]
@@ -37,6 +40,7 @@ impl From<EnvironmentKey> for EnvironmentKeyResponse {
             id: value.id.unwrap().to_string(),
             environment_id: value.environment_id.to_string(),
             algorithm: format!("{:?}", value.algorithm),
+            active: value.active,
             created_at: value.created_at.to_string(),
             updated_at: value.updated_at.to_string(),
         }
@@ -47,18 +51,19 @@ impl From<EnvironmentKey> for EnvironmentKeyResponse {
 pub struct EnvironmentKeyFilter {
     pub environment_id: Option<String>,
     pub algorithm: Option<String>,
+    pub active: Option<bool>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, ToSchema)]
 pub struct EnvironmentKeyCreatePayload {
     pub environment_id: String,
     pub algorithm: String,
-    pub key: String,
+    pub active: bool,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, ToSchema)]
 pub struct EnvironmentKeyUpdatePayload {
-    pub key: Option<String>,
+    pub active: Option<bool>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]

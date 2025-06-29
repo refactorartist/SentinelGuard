@@ -18,8 +18,8 @@ macro_rules! create_hmac {
 
 #[derive(Debug)]
 pub struct HmacKey {
-    key: Vec<u8>,
-    hash_function: HmacHashFunction,
+    pub key: Vec<u8>,
+    pub hash_function: HmacHashFunction,
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
