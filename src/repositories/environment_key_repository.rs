@@ -37,7 +37,11 @@ impl EnvironmentKeyRepository {
         }
     }
 
-    pub async fn get_environment_key(self, environment_id: Uuid, algorithm: Algorithm) -> Result<Vec<u8>, Error> {
+    pub async fn get_environment_key(
+        self,
+        environment_id: Uuid,
+        algorithm: Algorithm,
+    ) -> Result<String, Error> {
         let row = sqlx::query!(
             "SELECT id, environment_id, algorithm, key, active, created_at, updated_at FROM environment_key WHERE environment_id = $1 AND algorithm = $2 AND active = true LIMIT 1",
             environment_id,
@@ -48,8 +52,29 @@ impl EnvironmentKeyRepository {
         .map_err(|_| Error::msg("Database error"))?;
 
         let row = row.ok_or_else(|| Error::msg("Environment key not found"))?;
-        let key = self.secrets_manager.decrypt(&row.key, &environment_id)?;
-        Ok(key.into_bytes())
+        let key = self.decrypt_key(row.key, environment_id)?;
+        Ok(key)
+    }
+
+    pub fn generate_key(&self, algorithm: Algorithm) -> Result<String, Error> {
+        let key = KeyBuilder::new().generate_key(algorithm)?;
+        Ok(key.private_key_str)
+    }
+
+    pub fn generate_encrypted_key(
+        &self,
+        algorithm: Algorithm,
+        environment_id: Uuid,
+    ) -> Result<String, Error> {
+        let key = self.generate_key(algorithm)?;
+        let resource_id = environment_id;
+        let key_encrypted = self.secrets_manager.encrypt(&key, &resource_id)?;
+        Ok(key_encrypted)
+    }
+
+    pub fn decrypt_key(&self, key: String, environment_id: Uuid) -> Result<String, Error> {
+        let key_decrypted = self.secrets_manager.decrypt(&key, &environment_id)?;
+        Ok(key_decrypted)
     }
 }
 
@@ -62,17 +87,9 @@ impl Repository<EnvironmentKey> for EnvironmentKeyRepository {
 
     async fn create(&self, item: Self::CreatePayload) -> Result<EnvironmentKey, Error> {
         let algorithm = Algorithm::from_str(&item.algorithm).unwrap();
-        let key = KeyBuilder::new().generate_key(algorithm);
-        if key.is_err() {
-            return Err(Error::msg("Failed to generate key"));
-        }
-        let key = key.unwrap();
         let resource_id = Uuid::parse_str(&item.environment_id).unwrap();
-        let key_string = String::from_utf8(key.private_key.clone()).unwrap();
-        let key_encrypted = self
-            .secrets_manager
-            .encrypt(&key_string, &resource_id)
-            .unwrap();
+        let key_encrypted = self.generate_encrypted_key(algorithm, resource_id)?;
+
         let row = sqlx::query!(
             "INSERT INTO environment_key (environment_id, algorithm, key, active) VALUES ($1, $2, $3, $4) RETURNING id, environment_id, algorithm, key, active, created_at, updated_at",
             Uuid::parse_str(&item.environment_id).unwrap(),
