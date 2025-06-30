@@ -257,13 +257,37 @@ impl Repository<EnvironmentKey> for EnvironmentKeyRepository {
         if let Some(algorithm) = &filter.algorithm {
             conditions_list.push(("algorithm = $2", format!("{:?}", algorithm)));
         }
+
+        if let Some(active) = &filter.active {
+            match active {
+                true => conditions_list.push(("active = true", "".to_string())),
+                false => conditions_list.push(("active = false", "".to_string())),
+            }
+        }
+
         if !conditions_list.is_empty() {
             query.push("WHERE ");
             let mut conditions = query.separated(" AND ");
             for (condition, value) in conditions_list.iter() {
-                conditions.push(condition).push_bind(value);
+                if value.is_empty() {
+                    conditions.push(condition);
+                } else {
+                    conditions.push(condition).push_bind(value);
+                }
             }
         }
+
+        if let Some(environment_id) = &filter.environment_id {
+            if conditions_list.is_empty() {
+                query.push("WHERE ");
+            } else {
+                query.push(" AND ");
+            }
+            query.push("environment_id = ").push_bind(Uuid::parse_str(environment_id).unwrap());
+        }
+
+        dbg!(&query.sql());
+
         if let Some(sort) = sort {
             query.push(" ORDER BY ");
             let mut order_by = query.separated(", ");
