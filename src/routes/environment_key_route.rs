@@ -1,10 +1,11 @@
-use crate::models::pagination::Pagination;
 use crate::models::environment_key::{
-    EnvironmentKeyFilter, EnvironmentKeyResponse, EnvironmentKeySortOrder, EnvironmentKeySortableFields, EnvironmentKeyUpdatePayload, EnvironmentKeyCreatePayload
+    EnvironmentKeyCreatePayload, EnvironmentKeyFilter, EnvironmentKeyResponse,
+    EnvironmentKeySortOrder, EnvironmentKeySortableFields, EnvironmentKeyUpdatePayload,
 };
+use crate::models::pagination::Pagination;
 use crate::models::sort::SortOrder;
-use crate::services::environment_key_service::EnvironmentKeyService;
 use crate::services::base::Service;
+use crate::services::environment_key_service::EnvironmentKeyService;
 use actix_web::{Error, HttpResponse, web};
 use uuid::Uuid;
 
@@ -118,7 +119,10 @@ pub async fn list(
         )
         .await
         .map_err(actix_web::error::ErrorBadRequest)?;
-    let responses: Vec<EnvironmentKeyResponse> = environment_keys.into_iter().map(EnvironmentKeyResponse::from).collect();
+    let responses: Vec<EnvironmentKeyResponse> = environment_keys
+        .into_iter()
+        .map(EnvironmentKeyResponse::from)
+        .collect();
     Ok(HttpResponse::Ok().json(responses))
 }
 

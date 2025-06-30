@@ -35,11 +35,10 @@ async fn test_environment_key_route_create_valid(pool: PgPool) {
         .send_request(&app)
         .await;
 
-
     assert_eq!(response.status(), actix_web::http::StatusCode::CREATED);
     let created: EnvironmentKeyResponse = actix_web::test::read_body_json(response).await;
     assert_eq!(created.environment_id, payload.environment_id);
-    assert_eq!(created.algorithm, payload.algorithm); 
+    assert_eq!(created.algorithm, payload.algorithm);
     assert!(created.active);
 }
 
@@ -167,4 +166,4 @@ async fn test_environment_key_route_list_filter_by_active(pool: PgPool) {
     let keys: Vec<EnvironmentKeyResponse> = actix_web::test::read_body_json(response).await;
     assert!(!keys.is_empty());
     assert!(keys.iter().all(|k| !k.active));
-} 
+}
