@@ -167,3 +167,30 @@ async fn test_environment_key_route_list_filter_by_active(pool: PgPool) {
     assert!(!keys.is_empty());
     assert!(keys.iter().all(|k| !k.active));
 }
+
+
+#[sqlx::test(fixtures("../fixtures/environment_keys.sql"))]
+async fn test_environment_key_route_rotate_key_succeeds(pool: PgPool) {
+    let app = create_test_app!(services(pool), routes());
+    let key_id = "00000000-0000-0000-0000-000000000001";
+    let response = actix_web::test::TestRequest::post()
+        .uri(&format!("/environment-keys/{}/rotate", key_id))
+        .send_request(&app)
+        .await;
+    assert!(response.status().is_success());
+
+    let body: serde_json::Value = actix_web::test::read_body_json(response).await;
+    assert_eq!(body["id"], key_id);
+    assert_eq!(body["message"], "Environment key rotated successfully");
+}
+
+#[sqlx::test(fixtures("../fixtures/environment_keys.sql"))]
+async fn test_environment_key_route_rotate_key_not_found(pool: PgPool) {
+    let app = create_test_app!(services(pool), routes());
+    let key_id = "00000000-0000-0000-0000-00000000dead";
+    let response = actix_web::test::TestRequest::post()
+        .uri(&format!("/environment-keys/{}/rotate", key_id))
+        .send_request(&app)
+        .await;
+    assert!(response.status().is_client_error());
+}
