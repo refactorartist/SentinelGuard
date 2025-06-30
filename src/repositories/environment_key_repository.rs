@@ -56,6 +56,33 @@ impl EnvironmentKeyRepository {
         Ok(key)
     }
 
+    pub async fn rotate_key(self, id: Uuid) -> Result<EnvironmentKey, Error> {
+        let environment_key = self.read(id).await?;
+        let environment_key =
+            environment_key.ok_or_else(|| Error::msg("Environment key not found"))?;
+        let algorithm = environment_key.algorithm;
+        let environment_id = environment_key.environment_id;
+        let key_encrypted = self.generate_encrypted_key(algorithm, environment_id)?;
+        let row = sqlx::query!(
+            "UPDATE environment_key SET key = $1, updated_at = $2 WHERE id = $3 RETURNING id, environment_id, algorithm, active, created_at, updated_at",
+            key_encrypted,
+            chrono::Utc::now(),
+            id,
+        )
+        .fetch_one(&*self.pool)
+        .await
+        .map_err(|_| Error::msg("Database error"))?;
+
+        Ok(EnvironmentKey {
+            id: Some(row.id),
+            environment_id: row.environment_id,
+            algorithm: Algorithm::from_str(&row.algorithm).unwrap(),
+            active: row.active,
+            created_at: row.created_at,
+            updated_at: row.updated_at,
+        })
+    }
+
     pub fn generate_key(&self, algorithm: Algorithm) -> Result<String, Error> {
         let key = KeyBuilder::new().generate_key(algorithm)?;
         Ok(key.private_key_str)
@@ -283,7 +310,9 @@ impl Repository<EnvironmentKey> for EnvironmentKeyRepository {
             } else {
                 query.push(" AND ");
             }
-            query.push("environment_id = ").push_bind(Uuid::parse_str(environment_id).unwrap());
+            query
+                .push("environment_id = ")
+                .push_bind(Uuid::parse_str(environment_id).unwrap());
         }
 
         dbg!(&query.sql());
