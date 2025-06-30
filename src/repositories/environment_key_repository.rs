@@ -56,7 +56,7 @@ impl EnvironmentKeyRepository {
         Ok(key)
     }
 
-    pub async fn rotate_key(self, id: Uuid) -> Result<EnvironmentKey, Error> {
+    pub async fn rotate_key(&self, id: Uuid) -> Result<EnvironmentKey, Error> {
         let environment_key = self.read(id).await?;
         let environment_key =
             environment_key.ok_or_else(|| Error::msg("Environment key not found"))?;
