@@ -168,7 +168,6 @@ async fn test_environment_key_route_list_filter_by_active(pool: PgPool) {
     assert!(keys.iter().all(|k| !k.active));
 }
 
-
 #[sqlx::test(fixtures("../fixtures/environment_keys.sql"))]
 async fn test_environment_key_route_rotate_key_succeeds(pool: PgPool) {
     let app = create_test_app!(services(pool), routes());

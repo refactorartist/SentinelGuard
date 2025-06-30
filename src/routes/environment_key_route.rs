@@ -47,7 +47,10 @@ pub async fn rotate_key(
     service: web::Data<EnvironmentKeyService>,
     id: web::Path<Uuid>,
 ) -> Result<HttpResponse, Error> {
-    let environment_key = service.rotate_key(id.into_inner()).await.map_err(actix_web::error::ErrorBadRequest)?;
+    let environment_key = service
+        .rotate_key(id.into_inner())
+        .await
+        .map_err(actix_web::error::ErrorBadRequest)?;
     Ok(HttpResponse::Ok().json(json!({
         "id": environment_key.id.unwrap(),
         "message": "Environment key rotated successfully",
@@ -167,6 +170,6 @@ pub fn configure_routes(config: &mut actix_web::web::ServiceConfig) {
             .service(
                 actix_web::web::resource("/{id}/rotate")
                     .route(actix_web::web::post().to(rotate_key)),
-            )
+            ),
     );
 }
