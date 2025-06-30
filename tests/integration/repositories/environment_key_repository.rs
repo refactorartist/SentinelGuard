@@ -225,3 +225,86 @@ async fn test_get_environment_key_hmac(pool: PgPool) {
         .unwrap();
     assert!(!key.is_empty());
 }
+
+#[sqlx::test(fixtures("../fixtures/environment_keys.sql"))]
+async fn test_rotate_key_existing_active(pool: PgPool) {
+    let repo = EnvironmentKeyRepository::new(Arc::new(pool));
+    let id = Uuid::parse_str("00000000-0000-0000-0000-000000000001").unwrap();
+
+    // Get the original key and updated_at
+    let row = sqlx::query!(
+        "SELECT key, updated_at FROM environment_key WHERE id = $1",
+        id
+    )
+    .fetch_one(&*repo.pool)
+    .await
+    .unwrap();
+    let original_key = row.key.clone();
+    let original_updated_at = row.updated_at;
+
+    // Rotate the key
+    let rotated = repo.clone().rotate_key(id).await.unwrap();
+    assert_eq!(rotated.id, Some(id));
+    assert_eq!(
+        rotated.environment_id,
+        Uuid::parse_str("123e4567-e89b-12d3-a456-426614174000").unwrap()
+    );
+    assert!(rotated.updated_at > original_updated_at);
+
+    // The key in the DB should be different
+    let row = sqlx::query!(
+        "SELECT key, updated_at FROM environment_key WHERE id = $1",
+        id
+    )
+    .fetch_one(&*repo.pool)
+    .await
+    .unwrap();
+    assert_ne!(row.key, original_key);
+    assert!(row.updated_at > original_updated_at);
+}
+
+#[sqlx::test(fixtures("../fixtures/environment_keys.sql"))]
+async fn test_rotate_key_nonexistent(pool: PgPool) {
+    let repo = EnvironmentKeyRepository::new(Arc::new(pool));
+    let id = Uuid::new_v4();
+    let result = repo.clone().rotate_key(id).await;
+    assert!(result.is_err());
+    assert_eq!(result.unwrap_err().to_string(), "Environment key not found");
+}
+
+#[sqlx::test(fixtures("../fixtures/environment_keys.sql"))]
+async fn test_rotate_key_inactive(pool: PgPool) {
+    let repo = EnvironmentKeyRepository::new(Arc::new(pool));
+    let id = Uuid::parse_str("00000000-0000-0000-0000-000000000002").unwrap(); // inactive key
+
+    // Get the original key and updated_at
+    let row = sqlx::query!(
+        "SELECT key, updated_at FROM environment_key WHERE id = $1",
+        id
+    )
+    .fetch_one(&*repo.pool)
+    .await
+    .unwrap();
+    let original_key = row.key.clone();
+    let original_updated_at = row.updated_at;
+
+    // Rotate the key (should still succeed)
+    let rotated = repo.clone().rotate_key(id).await.unwrap();
+    assert_eq!(rotated.id, Some(id));
+    assert_eq!(
+        rotated.environment_id,
+        Uuid::parse_str("123e4567-e89b-12d3-a456-426614174000").unwrap()
+    );
+    assert!(rotated.updated_at > original_updated_at);
+
+    // The key in the DB should be different
+    let row = sqlx::query!(
+        "SELECT key, updated_at FROM environment_key WHERE id = $1",
+        id
+    )
+    .fetch_one(&*repo.pool)
+    .await
+    .unwrap();
+    assert_ne!(row.key, original_key);
+    assert!(row.updated_at > original_updated_at);
+}

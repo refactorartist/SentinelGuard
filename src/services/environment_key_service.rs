@@ -34,6 +34,10 @@ impl EnvironmentKeyService {
             .await?;
         Ok(key)
     }
+
+    pub async fn rotate_key(&self, id: Uuid) -> Result<EnvironmentKey, Error> {
+        self.repository.rotate_key(id).await
+    }
 }
 
 #[async_trait]
