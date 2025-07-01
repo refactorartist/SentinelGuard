@@ -6,11 +6,10 @@ use sentinel_guard::{
     models::project::{Project, ProjectCreatePayload, ProjectUpdatePayload},
     repositories::project_repository::ProjectRepository,
     routes::project_route,
-    services::project_service::ProjectService,
 };
 
-fn services(pool: PgPool) -> ProjectService {
-    ProjectService::new(ProjectRepository::new(Arc::new(pool)))
+fn repositories(pool: PgPool) -> ProjectRepository {
+    ProjectRepository::new(Arc::new(pool))
 }
 
 fn routes() -> fn(&mut actix_web::web::ServiceConfig) {
@@ -21,7 +20,7 @@ use crate::create_test_app;
 
 #[sqlx::test]
 async fn test_project_route_create_project_with_valid_data_succeeds(pool: PgPool) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
 
     let project = ProjectCreatePayload {
         name: "test".to_string(),
@@ -46,7 +45,7 @@ async fn test_project_route_create_project_with_valid_data_succeeds(pool: PgPool
 
 #[sqlx::test(fixtures("../fixtures/projects.sql"))]
 async fn test_project_route_create_project_with_duplicate_name_fails(pool: PgPool) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
 
     let project = ProjectCreatePayload {
         name: "testa".to_string(),
@@ -67,7 +66,7 @@ async fn test_project_route_create_project_with_duplicate_name_fails(pool: PgPoo
 
 #[sqlx::test(fixtures("../fixtures/projects.sql"))]
 async fn test_project_route_get_project_by_id_succeeds(pool: PgPool) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
 
     let response = actix_web::test::TestRequest::get()
         .uri("/projects/123e4567-e89b-12d3-a456-426614174000")
@@ -85,7 +84,7 @@ async fn test_project_route_get_project_by_id_succeeds(pool: PgPool) {
 
 #[sqlx::test]
 async fn test_project_route_get_project_by_id_not_found(pool: PgPool) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
 
     let response = actix_web::test::TestRequest::get()
         .uri("/projects/123e4567-e89b-12d3-a456-426614174000")
@@ -99,7 +98,7 @@ async fn test_project_route_get_project_by_id_not_found(pool: PgPool) {
 
 #[sqlx::test(fixtures("../fixtures/projects.sql"))]
 async fn test_project_route_patch_project_name_succeeds(pool: PgPool) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
 
     let payload = ProjectUpdatePayload {
         name: Some("testc".to_string()),
@@ -118,7 +117,7 @@ async fn test_project_route_patch_project_name_succeeds(pool: PgPool) {
 
 #[sqlx::test(fixtures("../fixtures/projects.sql"))]
 async fn test_project_route_patch_project_description_succeeds(pool: PgPool) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
 
     let payload = ProjectUpdatePayload {
         name: None,
@@ -139,7 +138,7 @@ async fn test_project_route_patch_project_description_succeeds(pool: PgPool) {
 
 #[sqlx::test(fixtures("../fixtures/projects.sql"))]
 async fn test_project_route_patch_project_enabled_succeeds(pool: PgPool) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
 
     let payload = ProjectUpdatePayload {
         name: None,
@@ -158,7 +157,7 @@ async fn test_project_route_patch_project_enabled_succeeds(pool: PgPool) {
 
 #[sqlx::test(fixtures("../fixtures/projects.sql"))]
 async fn test_project_route_patch_project_empty_payload(pool: PgPool) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
 
     let payload = ProjectUpdatePayload {
         name: None,
@@ -178,7 +177,7 @@ async fn test_project_route_patch_project_empty_payload(pool: PgPool) {
 
 #[sqlx::test]
 async fn test_project_route_patch_project_not_found(pool: PgPool) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
 
     let payload = ProjectUpdatePayload {
         name: Some("test".to_string()),
@@ -198,7 +197,7 @@ async fn test_project_route_patch_project_not_found(pool: PgPool) {
 
 #[sqlx::test(fixtures("../fixtures/projects.sql"))]
 async fn test_project_route_patch_project_duplicate_name_error(pool: PgPool) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
 
     let payload = ProjectUpdatePayload {
         name: Some("testa".to_string()),
@@ -218,7 +217,7 @@ async fn test_project_route_patch_project_duplicate_name_error(pool: PgPool) {
 
 #[sqlx::test(fixtures("../fixtures/projects.sql"))]
 async fn test_project_route_delete_project_succeeds(pool: PgPool) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
 
     let response = actix_web::test::TestRequest::delete()
         .uri("/projects/123e4567-e89b-12d3-a456-426614174000")
@@ -231,7 +230,7 @@ async fn test_project_route_delete_project_succeeds(pool: PgPool) {
 
 #[sqlx::test]
 async fn test_project_route_delete_project_not_found(pool: PgPool) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
 
     let response = actix_web::test::TestRequest::delete()
         .uri("/projects/123e4567-e89b-12d3-a456-426614174000")
@@ -244,7 +243,7 @@ async fn test_project_route_delete_project_not_found(pool: PgPool) {
 
 #[sqlx::test(fixtures("../fixtures/projects.sql"))]
 async fn test_project_route_list_projects_returns_all(pool: PgPool) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
     let response = actix_web::test::TestRequest::get()
         .uri("/projects")
         .send_request(&app)
@@ -261,7 +260,7 @@ async fn test_project_route_list_projects_returns_all(pool: PgPool) {
 
 #[sqlx::test(fixtures("../fixtures/projects.sql"))]
 async fn test_project_route_list_projects_with_pagination(pool: PgPool) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
     // limit=2, offset=1
     let response = actix_web::test::TestRequest::get()
         .uri("/projects?limit=2&offset=1")
@@ -274,7 +273,7 @@ async fn test_project_route_list_projects_with_pagination(pool: PgPool) {
 
 #[sqlx::test(fixtures("../fixtures/projects.sql"))]
 async fn test_project_route_list_projects_filter_by_name(pool: PgPool) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
     let response = actix_web::test::TestRequest::get()
         .uri("/projects?name=something")
         .send_request(&app)
@@ -287,7 +286,7 @@ async fn test_project_route_list_projects_filter_by_name(pool: PgPool) {
 
 #[sqlx::test(fixtures("../fixtures/projects.sql"))]
 async fn test_project_route_list_projects_filter_by_enabled_true(pool: PgPool) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
     let response = actix_web::test::TestRequest::get()
         .uri("/projects?enabled=true")
         .send_request(&app)
@@ -300,7 +299,7 @@ async fn test_project_route_list_projects_filter_by_enabled_true(pool: PgPool) {
 
 #[sqlx::test(fixtures("../fixtures/projects.sql"))]
 async fn test_project_route_list_projects_filter_by_enabled_false(pool: PgPool) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
     let response = actix_web::test::TestRequest::get()
         .uri("/projects?enabled=false")
         .send_request(&app)
@@ -313,7 +312,7 @@ async fn test_project_route_list_projects_filter_by_enabled_false(pool: PgPool) 
 
 #[sqlx::test]
 async fn test_project_route_list_projects_empty(pool: PgPool) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
     let response = actix_web::test::TestRequest::get()
         .uri("/projects")
         .send_request(&app)

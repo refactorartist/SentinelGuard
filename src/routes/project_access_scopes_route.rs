@@ -4,8 +4,8 @@ use crate::models::project_access_scopes::{
     ProjectAccessScopeSortOrder, ProjectAccessScopeSortableFields, ProjectAccessScopeUpdatePayload,
 };
 use crate::models::sort::SortOrder;
-use crate::services::base::Service;
-use crate::services::project_access_scopes_service::ProjectAccessScopesService;
+use crate::repositories::project_access_scopes_repository::ProjectAccessScopesRepository;
+use crate::repositories::base::Repository;
 use actix_web::{Error, HttpResponse, web};
 use uuid::Uuid;
 
@@ -20,10 +20,10 @@ use uuid::Uuid;
     ),
 )]
 pub async fn post(
-    service: web::Data<ProjectAccessScopesService>,
+    repository: web::Data<ProjectAccessScopesRepository>,
     payload: web::Json<ProjectAccessScopeCreatePayload>,
 ) -> Result<HttpResponse, Error> {
-    let project_access_scope = service
+    let project_access_scope = repository
         .create(payload.into_inner())
         .await
         .map_err(actix_web::error::ErrorBadRequest)?;
@@ -43,10 +43,10 @@ pub async fn post(
     ),
 )]
 pub async fn get(
-    service: web::Data<ProjectAccessScopesService>,
+    repository: web::Data<ProjectAccessScopesRepository>,
     id: web::Path<Uuid>,
 ) -> Result<HttpResponse, Error> {
-    let project_access_scope = service
+    let project_access_scope = repository
         .read(id.into_inner())
         .await
         .map_err(actix_web::error::ErrorNotFound)?;
@@ -75,11 +75,11 @@ pub async fn get(
     ),
 )]
 pub async fn patch(
-    service: web::Data<ProjectAccessScopesService>,
+    repository: web::Data<ProjectAccessScopesRepository>,
     id: web::Path<Uuid>,
     payload: web::Json<ProjectAccessScopeUpdatePayload>,
 ) -> Result<HttpResponse, Error> {
-    let project_access_scope = service.update(id.into_inner(), payload.into_inner()).await;
+    let project_access_scope = repository.update(id.into_inner(), payload.into_inner()).await;
     if let Err(error) = project_access_scope {
         let error_message = error.to_string();
         match error_message.as_str() {
@@ -111,10 +111,10 @@ pub async fn patch(
     )
 )]
 pub async fn delete(
-    service: web::Data<ProjectAccessScopesService>,
+    repository: web::Data<ProjectAccessScopesRepository>,
     id: web::Path<Uuid>,
 ) -> Result<HttpResponse, Error> {
-    let result = service.delete(id.into_inner()).await;
+    let result = repository.delete(id.into_inner()).await;
     if let Err(error) = result {
         let error_message = error.to_string();
         match error_message.as_str() {
@@ -142,7 +142,7 @@ pub async fn delete(
     )
 )]
 pub async fn list(
-    service: web::Data<ProjectAccessScopesService>,
+    repository: web::Data<ProjectAccessScopesRepository>,
     filter: web::Query<ProjectAccessScopeFilter>,
     pagination: web::Query<Pagination>,
 ) -> Result<HttpResponse, Error> {
@@ -150,7 +150,7 @@ pub async fn list(
         ProjectAccessScopeSortableFields::Id,
         SortOrder::Asc,
     )];
-    let project_access_scopes = service
+    let project_access_scopes = repository
         .find(
             filter.into_inner(),
             Some(sort),

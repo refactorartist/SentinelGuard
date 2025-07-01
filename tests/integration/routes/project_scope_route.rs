@@ -6,14 +6,13 @@ use sentinel_guard::{
     },
     repositories::project_scope_repository::ProjectScopeRepository,
     routes::project_scope_route,
-    services::project_scope_service::ProjectScopeService,
 };
 use sqlx::PgPool;
 
 use crate::create_test_app;
 
-fn services(pool: PgPool) -> ProjectScopeService {
-    ProjectScopeService::new(ProjectScopeRepository::new(Arc::new(pool)))
+fn repositories(pool: PgPool) -> ProjectScopeRepository {
+    ProjectScopeRepository::new(Arc::new(pool))
 }
 
 fn routes() -> fn(&mut actix_web::web::ServiceConfig) {
@@ -22,7 +21,7 @@ fn routes() -> fn(&mut actix_web::web::ServiceConfig) {
 
 #[sqlx::test(fixtures("../fixtures/projects.sql"))]
 async fn test_project_scope_route_create_project_scope_with_valid_data_succeeds(pool: PgPool) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
 
     let project_scope = ProjectScopeCreatePayload {
         scope: "test:changes-made".to_string(),
@@ -44,7 +43,7 @@ async fn test_project_scope_route_create_project_scope_with_valid_data_succeeds(
 async fn test_project_scope_route_create_project_scope_with_duplicate_project_id_scope_fails(
     pool: PgPool,
 ) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
 
     let project_scope = ProjectScopeCreatePayload {
         scope: "testa:admin".to_string(),
@@ -65,7 +64,7 @@ async fn test_project_scope_route_create_project_scope_with_duplicate_project_id
 
 #[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/project_scopes.sql"))]
 async fn test_project_scope_route_read_project_scope_by_id_successful(pool: PgPool) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
 
     let response = actix_web::test::TestRequest::get()
         .uri("/project-scopes/00000000-0000-0000-0000-000000000001")
@@ -77,7 +76,7 @@ async fn test_project_scope_route_read_project_scope_by_id_successful(pool: PgPo
 
 #[sqlx::test]
 async fn test_project_scope_route_read_project_scope_by_id_not_found(pool: PgPool) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
 
     let response = actix_web::test::TestRequest::get()
         .uri("/project-scopes/00000000-0000-0000-0000-000000000002")
@@ -90,7 +89,7 @@ async fn test_project_scope_route_read_project_scope_by_id_not_found(pool: PgPoo
 
 #[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/project_scopes.sql"))]
 async fn test_project_scope_route_patch_scope_successful(pool: PgPool) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
 
     let payload = ProjectScopeUpdatePayload {
         scope: Some("test:changes-made".to_string()),
@@ -109,7 +108,7 @@ async fn test_project_scope_route_patch_scope_successful(pool: PgPool) {
 
 #[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/project_scopes.sql"))]
 async fn test_project_scope_route_patch_description_successful(pool: PgPool) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
 
     let payload = ProjectScopeUpdatePayload {
         scope: None,
@@ -128,7 +127,7 @@ async fn test_project_scope_route_patch_description_successful(pool: PgPool) {
 
 #[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/project_scopes.sql"))]
 async fn test_project_scope_route_patch_enabled_true_successful(pool: PgPool) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
 
     let payload = ProjectScopeUpdatePayload {
         scope: None,
@@ -147,7 +146,7 @@ async fn test_project_scope_route_patch_enabled_true_successful(pool: PgPool) {
 
 #[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/project_scopes.sql"))]
 async fn test_project_scope_route_patch_enabled_false_successful(pool: PgPool) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
 
     let payload = ProjectScopeUpdatePayload {
         scope: None,
@@ -166,7 +165,7 @@ async fn test_project_scope_route_patch_enabled_false_successful(pool: PgPool) {
 
 #[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/project_scopes.sql"))]
 async fn test_project_scope_route_patch_duplicate_project_id_scope_fails(pool: PgPool) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
 
     let payload = ProjectScopeUpdatePayload {
         scope: Some("testa:write".to_string()),
@@ -186,7 +185,7 @@ async fn test_project_scope_route_patch_duplicate_project_id_scope_fails(pool: P
 
 #[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/project_scopes.sql"))]
 async fn test_project_scope_route_delete_project_scope_successful(pool: PgPool) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
 
     let response = actix_web::test::TestRequest::delete()
         .uri("/project-scopes/00000000-0000-0000-0000-000000000001")
@@ -198,7 +197,7 @@ async fn test_project_scope_route_delete_project_scope_successful(pool: PgPool) 
 
 #[sqlx::test]
 async fn test_project_scope_route_delete_project_scope_not_found(pool: PgPool) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
 
     let response = actix_web::test::TestRequest::delete()
         .uri("/project-scopes/00000000-0000-0000-0000-000000000002")
@@ -213,7 +212,7 @@ async fn test_project_scope_route_delete_project_scope_not_found(pool: PgPool) {
 
 #[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/project_scopes.sql"))]
 async fn test_project_scope_route_list_project_scopes_filter_by_project_id(pool: PgPool) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
 
     let response = actix_web::test::TestRequest::get()
         .uri("/project-scopes?project_id=123e4567-e89b-12d3-a456-426614174000")
@@ -232,7 +231,7 @@ async fn test_project_scope_route_list_project_scopes_filter_by_project_id(pool:
 // TODO: test_project_scope_route_list_project_scopes_filter_by_enabled_true
 #[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/project_scopes.sql"))]
 async fn test_project_scope_route_list_project_scopes_filter_by_enabled_true(pool: PgPool) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
 
     let response = actix_web::test::TestRequest::get()
         .uri("/project-scopes?enabled=true")
@@ -246,7 +245,7 @@ async fn test_project_scope_route_list_project_scopes_filter_by_enabled_true(poo
 
 #[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/project_scopes.sql"))]
 async fn test_project_scope_route_list_project_scopes_filter_by_enabled_false(pool: PgPool) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
 
     let response = actix_web::test::TestRequest::get()
         .uri("/project-scopes?enabled=false")
@@ -260,7 +259,7 @@ async fn test_project_scope_route_list_project_scopes_filter_by_enabled_false(po
 
 #[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/project_scopes.sql"))]
 async fn test_project_scope_route_list_project_scopes_filter_by_scope(pool: PgPool) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
 
     let response = actix_web::test::TestRequest::get()
         .uri("/project-scopes?scope=testa:read")
@@ -274,7 +273,7 @@ async fn test_project_scope_route_list_project_scopes_filter_by_scope(pool: PgPo
 
 #[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/project_scopes.sql"))]
 async fn test_project_scope_route_list_project_scopes_filter_by_description(pool: PgPool) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
 
     let response = actix_web::test::TestRequest::get()
         .uri("/project-scopes?description=Read+access")
@@ -292,7 +291,7 @@ async fn test_project_scope_route_list_project_scopes_filter_by_description(pool
 
 #[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/project_scopes.sql"))]
 async fn test_project_scope_route_list_project_scopes_limit_success(pool: PgPool) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
 
     let response = actix_web::test::TestRequest::get()
         .uri("/project-scopes?limit=1")
@@ -306,7 +305,7 @@ async fn test_project_scope_route_list_project_scopes_limit_success(pool: PgPool
 
 #[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/project_scopes.sql"))]
 async fn test_project_scope_route_list_project_scopes_offset_success(pool: PgPool) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
 
     // First request - get first item
     let first_response = actix_web::test::TestRequest::get()

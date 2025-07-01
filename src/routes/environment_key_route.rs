@@ -4,8 +4,8 @@ use crate::models::environment_key::{
 };
 use crate::models::pagination::Pagination;
 use crate::models::sort::SortOrder;
-use crate::services::base::Service;
-use crate::services::environment_key_service::EnvironmentKeyService;
+use crate::repositories::environment_key_repository::EnvironmentKeyRepository;
+use crate::repositories::base::Repository;
 use actix_web::{Error, HttpResponse, web};
 use serde_json::json;
 use uuid::Uuid;
@@ -21,10 +21,10 @@ use uuid::Uuid;
     ),
 )]
 pub async fn post(
-    service: web::Data<EnvironmentKeyService>,
+    repository: web::Data<EnvironmentKeyRepository>,
     payload: web::Json<EnvironmentKeyCreatePayload>,
 ) -> Result<HttpResponse, Error> {
-    let environment_key = service
+    let environment_key = repository
         .create(payload.into_inner())
         .await
         .map_err(actix_web::error::ErrorBadRequest)?;
@@ -44,10 +44,10 @@ pub async fn post(
     ),
 )]
 pub async fn rotate_key(
-    service: web::Data<EnvironmentKeyService>,
+    repository: web::Data<EnvironmentKeyRepository>,
     id: web::Path<Uuid>,
 ) -> Result<HttpResponse, Error> {
-    let environment_key = service
+    let environment_key = repository
         .rotate_key(id.into_inner())
         .await
         .map_err(actix_web::error::ErrorBadRequest)?;
@@ -67,10 +67,10 @@ pub async fn rotate_key(
     ),
 )]
 pub async fn get(
-    service: web::Data<EnvironmentKeyService>,
+    repository: web::Data<EnvironmentKeyRepository>,
     id: web::Path<Uuid>,
 ) -> Result<HttpResponse, Error> {
-    let environment_key = service
+    let environment_key = repository
         .read(id.into_inner())
         .await
         .map_err(actix_web::error::ErrorBadRequest)?;
@@ -88,11 +88,11 @@ pub async fn get(
     ),
 )]
 pub async fn patch(
-    service: web::Data<EnvironmentKeyService>,
+    repository: web::Data<EnvironmentKeyRepository>,
     id: web::Path<Uuid>,
     payload: web::Json<EnvironmentKeyUpdatePayload>,
 ) -> Result<HttpResponse, Error> {
-    let environment_key = service
+    let environment_key = repository
         .update(id.into_inner(), payload.into_inner())
         .await
         .map_err(actix_web::error::ErrorBadRequest)?;
@@ -109,10 +109,10 @@ pub async fn patch(
     ),
 )]
 pub async fn delete(
-    service: web::Data<EnvironmentKeyService>,
+    repository: web::Data<EnvironmentKeyRepository>,
     id: web::Path<Uuid>,
 ) -> Result<HttpResponse, Error> {
-    let deleted = service
+    let deleted = repository
         .delete(id.into_inner())
         .await
         .map_err(actix_web::error::ErrorBadRequest)?;
@@ -129,7 +129,7 @@ pub async fn delete(
     ),
 )]
 pub async fn list(
-    service: web::Data<EnvironmentKeyService>,
+    repository: web::Data<EnvironmentKeyRepository>,
     filter: web::Query<EnvironmentKeyFilter>,
     pagination: web::Query<Pagination>,
 ) -> Result<HttpResponse, Error> {
@@ -138,7 +138,7 @@ pub async fn list(
         order: SortOrder::Desc,
     }];
 
-    let environment_keys = service
+    let environment_keys = repository
         .find(
             filter.into_inner(),
             Some(sort),

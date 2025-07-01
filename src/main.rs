@@ -1,7 +1,7 @@
 use actix_web::HttpServer;
 use sentinel_guard::config::AppConfig;
 use sentinel_guard::routes::register::register_routes;
-use sentinel_guard::services::register::register_services;
+use sentinel_guard::repositories::register::register_repositories;
 use sentinel_guard::utils::swagger::get_swagger_ui;
 use sqlx::postgres::PgPool;
 use std::{sync::Arc, time::Duration};
@@ -18,7 +18,7 @@ async fn main() -> Result<(), anyhow::Error> {
     let server = HttpServer::new(move || {
         let app = actix_web::App::new();
 
-        let app = register_services(app, pool.clone());
+        let app = register_repositories(app, pool.clone());
         let app = register_routes(app);
         app.service(get_swagger_ui())
     })

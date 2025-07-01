@@ -8,13 +8,12 @@ use sentinel_guard::{
     },
     repositories::service_account_repository::ServiceAccountRepository,
     routes::service_account_route,
-    services::service_account_service::ServiceAccountService,
 };
 
 use crate::create_test_app;
 
-fn services(pool: PgPool) -> ServiceAccountService {
-    ServiceAccountService::new(ServiceAccountRepository::new(Arc::new(pool)))
+fn repositories(pool: PgPool) -> ServiceAccountRepository {
+    ServiceAccountRepository::new(Arc::new(pool))
 }
 
 fn routes() -> fn(&mut actix_web::web::ServiceConfig) {
@@ -23,7 +22,7 @@ fn routes() -> fn(&mut actix_web::web::ServiceConfig) {
 
 #[sqlx::test]
 async fn test_service_account_route_create_service_account_with_valid_data_succeeds(pool: PgPool) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
 
     let service_account = ServiceAccountCreatePayload {
         name: "test".to_string(),
@@ -50,7 +49,7 @@ async fn test_service_account_route_create_service_account_with_valid_data_succe
 
 #[sqlx::test(fixtures("../fixtures/service_accounts.sql"))]
 async fn test_service_account_route_create_service_account_with_duplicate_name_fails(pool: PgPool) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
 
     let service_account = ServiceAccountCreatePayload {
         name: "Test Account 1".to_string(),
@@ -75,7 +74,7 @@ async fn test_service_account_route_create_service_account_with_duplicate_name_f
 async fn test_service_account_route_create_service_account_with_duplicate_email_fails(
     pool: PgPool,
 ) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
 
     let service_account = ServiceAccountCreatePayload {
         name: "Test Account 1".to_string(),
@@ -98,7 +97,7 @@ async fn test_service_account_route_create_service_account_with_duplicate_email_
 
 #[sqlx::test(fixtures("../fixtures/service_accounts.sql"))]
 async fn test_service_account_route_get_service_account_by_id_succeeds(pool: PgPool) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
 
     let response = actix_web::test::TestRequest::get()
         .uri("/service-accounts/123e4567-e89b-12d3-a456-426614174000")
@@ -118,7 +117,7 @@ async fn test_service_account_route_get_service_account_by_id_succeeds(pool: PgP
 
 #[sqlx::test]
 async fn test_service_account_route_get_service_account_by_id_not_found(pool: PgPool) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
 
     let response = actix_web::test::TestRequest::get()
         .uri("/service-accounts/123e4567-e89b-12d3-a456-426614174000")
@@ -132,7 +131,7 @@ async fn test_service_account_route_get_service_account_by_id_not_found(pool: Pg
 
 #[sqlx::test(fixtures("../fixtures/service_accounts.sql"))]
 async fn test_service_account_route_patch_service_account_name_succeeds(pool: PgPool) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
 
     let payload = ServiceAccountUpdatePayload {
         name: Some("testc".to_string()),
@@ -153,7 +152,7 @@ async fn test_service_account_route_patch_service_account_name_succeeds(pool: Pg
 
 #[sqlx::test(fixtures("../fixtures/service_accounts.sql"))]
 async fn test_service_account_route_patch_service_account_description_succeeds(pool: PgPool) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
 
     let payload = ServiceAccountUpdatePayload {
         name: None,
@@ -176,7 +175,7 @@ async fn test_service_account_route_patch_service_account_description_succeeds(p
 
 #[sqlx::test(fixtures("../fixtures/service_accounts.sql"))]
 async fn test_service_account_route_patch_service_account_enabled_succeeds(pool: PgPool) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
 
     let payload = ServiceAccountUpdatePayload {
         name: None,
@@ -197,7 +196,7 @@ async fn test_service_account_route_patch_service_account_enabled_succeeds(pool:
 
 #[sqlx::test(fixtures("../fixtures/service_accounts.sql"))]
 async fn test_service_account_route_patch_service_account_empty_payload(pool: PgPool) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
 
     let payload = ServiceAccountUpdatePayload {
         name: None,
@@ -219,7 +218,7 @@ async fn test_service_account_route_patch_service_account_empty_payload(pool: Pg
 
 #[sqlx::test]
 async fn test_service_account_route_patch_service_account_not_found(pool: PgPool) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
 
     let payload = ServiceAccountUpdatePayload {
         name: Some("test".to_string()),
@@ -241,7 +240,7 @@ async fn test_service_account_route_patch_service_account_not_found(pool: PgPool
 
 #[sqlx::test(fixtures("../fixtures/service_accounts.sql"))]
 async fn test_service_account_route_patch_service_account_duplicate_name_error(pool: PgPool) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
 
     let payload = ServiceAccountUpdatePayload {
         name: Some("Test Account 3".to_string()),
@@ -263,7 +262,7 @@ async fn test_service_account_route_patch_service_account_duplicate_name_error(p
 
 #[sqlx::test(fixtures("../fixtures/service_accounts.sql"))]
 async fn test_service_account_route_patch_service_account_duplicate_email_error(pool: PgPool) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
 
     let payload = ServiceAccountUpdatePayload {
         name: None,
@@ -285,7 +284,7 @@ async fn test_service_account_route_patch_service_account_duplicate_email_error(
 
 #[sqlx::test(fixtures("../fixtures/service_accounts.sql"))]
 async fn test_service_account_route_delete_service_account_succeeds(pool: PgPool) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
 
     let response = actix_web::test::TestRequest::delete()
         .uri("/service-accounts/123e4567-e89b-12d3-a456-426614174000")
@@ -298,7 +297,7 @@ async fn test_service_account_route_delete_service_account_succeeds(pool: PgPool
 
 #[sqlx::test]
 async fn test_service_account_route_delete_service_account_not_found(pool: PgPool) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
 
     let response = actix_web::test::TestRequest::delete()
         .uri("/service-accounts/123e4567-e89b-12d3-a456-426614174000")
@@ -311,7 +310,7 @@ async fn test_service_account_route_delete_service_account_not_found(pool: PgPoo
 
 #[sqlx::test(fixtures("../fixtures/service_accounts.sql"))]
 async fn test_service_account_route_list_service_accounts_returns_all(pool: PgPool) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
     let response = actix_web::test::TestRequest::get()
         .uri("/service-accounts")
         .send_request(&app)
@@ -328,7 +327,7 @@ async fn test_service_account_route_list_service_accounts_returns_all(pool: PgPo
 
 #[sqlx::test(fixtures("../fixtures/service_accounts.sql"))]
 async fn test_service_account_route_list_service_accounts_with_pagination(pool: PgPool) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
     // limit=2, offset=1
     let response = actix_web::test::TestRequest::get()
         .uri("/service-accounts?limit=2&offset=1")
@@ -341,7 +340,7 @@ async fn test_service_account_route_list_service_accounts_with_pagination(pool: 
 
 #[sqlx::test(fixtures("../fixtures/service_accounts.sql"))]
 async fn test_service_account_route_list_service_accounts_filter_by_name(pool: PgPool) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
     let response = actix_web::test::TestRequest::get()
         .uri("/service-accounts?name=Test")
         .send_request(&app)
@@ -354,7 +353,7 @@ async fn test_service_account_route_list_service_accounts_filter_by_name(pool: P
 
 #[sqlx::test(fixtures("../fixtures/service_accounts.sql"))]
 async fn test_service_account_route_list_service_accounts_filter_by_enabled_true(pool: PgPool) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
     let response = actix_web::test::TestRequest::get()
         .uri("/service-accounts?enabled=true")
         .send_request(&app)
@@ -367,7 +366,7 @@ async fn test_service_account_route_list_service_accounts_filter_by_enabled_true
 
 #[sqlx::test(fixtures("../fixtures/service_accounts.sql"))]
 async fn test_service_account_route_list_service_accounts_filter_by_enabled_false(pool: PgPool) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
     let response = actix_web::test::TestRequest::get()
         .uri("/service-accounts?enabled=false")
         .send_request(&app)
@@ -380,7 +379,7 @@ async fn test_service_account_route_list_service_accounts_filter_by_enabled_fals
 
 #[sqlx::test]
 async fn test_service_account_route_list_service_accounts_empty(pool: PgPool) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
     let response = actix_web::test::TestRequest::get()
         .uri("/service-accounts")
         .send_request(&app)
