@@ -9,11 +9,10 @@ use sentinel_guard::{
     },
     repositories::project_access_scopes_repository::ProjectAccessScopesRepository,
     routes::project_access_scopes_route,
-    services::project_access_scopes_service::ProjectAccessScopesService,
 };
 
-fn services(pool: PgPool) -> ProjectAccessScopesService {
-    ProjectAccessScopesService::new(ProjectAccessScopesRepository::new(Arc::new(pool)))
+fn repositories(pool: PgPool) -> ProjectAccessScopesRepository {
+    ProjectAccessScopesRepository::new(Arc::new(pool))
 }
 
 fn routes() -> fn(&mut actix_web::web::ServiceConfig) {
@@ -24,7 +23,7 @@ use crate::create_test_app;
 
 #[sqlx::test(fixtures("../fixtures/project_access_scopes.sql"))]
 async fn test_project_access_scopes_route_create_valid(pool: PgPool) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
     let payload = ProjectAccessScopeCreatePayload {
         project_access_id: "00000000-0000-0000-0000-000000000102".to_string(),
         scope_id: "00000000-0000-0000-0000-000000000002".to_string(),
@@ -43,7 +42,7 @@ async fn test_project_access_scopes_route_create_valid(pool: PgPool) {
 
 #[sqlx::test(fixtures("../fixtures/project_access_scopes.sql"))]
 async fn test_project_access_scopes_route_create_duplicate_fails(pool: PgPool) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
     let payload = ProjectAccessScopeCreatePayload {
         project_access_id: "00000000-0000-0000-0000-000000000101".to_string(),
         scope_id: "00000000-0000-0000-0000-000000000001".to_string(),
@@ -58,7 +57,7 @@ async fn test_project_access_scopes_route_create_duplicate_fails(pool: PgPool) {
 
 #[sqlx::test(fixtures("../fixtures/project_access_scopes.sql"))]
 async fn test_project_access_scopes_route_get_by_id_succeeds(pool: PgPool) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
     let response = actix_web::test::TestRequest::get()
         .uri("/project-access-scopes/00000000-0000-0000-0000-000000001001")
         .send_request(&app)
@@ -70,7 +69,7 @@ async fn test_project_access_scopes_route_get_by_id_succeeds(pool: PgPool) {
 
 #[sqlx::test(fixtures("../fixtures/project_access_scopes.sql"))]
 async fn test_project_access_scopes_route_get_by_id_not_found(pool: PgPool) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
     let response = actix_web::test::TestRequest::get()
         .uri("/project-access-scopes/00000000-0000-0000-0000-00000000dead")
         .send_request(&app)
@@ -80,7 +79,7 @@ async fn test_project_access_scopes_route_get_by_id_not_found(pool: PgPool) {
 
 #[sqlx::test(fixtures("../fixtures/project_access_scopes.sql"))]
 async fn test_project_access_scopes_route_patch_enabled_succeeds(pool: PgPool) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
     let payload = ProjectAccessScopeUpdatePayload {
         enabled: Some(false),
     };
@@ -96,7 +95,7 @@ async fn test_project_access_scopes_route_patch_enabled_succeeds(pool: PgPool) {
 
 #[sqlx::test(fixtures("../fixtures/project_access_scopes.sql"))]
 async fn test_project_access_scopes_route_patch_not_found(pool: PgPool) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
     let payload = ProjectAccessScopeUpdatePayload {
         enabled: Some(false),
     };
@@ -110,7 +109,7 @@ async fn test_project_access_scopes_route_patch_not_found(pool: PgPool) {
 
 #[sqlx::test(fixtures("../fixtures/project_access_scopes.sql"))]
 async fn test_project_access_scopes_route_patch_empty_payload(pool: PgPool) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
     let payload = ProjectAccessScopeUpdatePayload { enabled: None };
     let response = actix_web::test::TestRequest::patch()
         .uri("/project-access-scopes/00000000-0000-0000-0000-000000001001")
@@ -122,7 +121,7 @@ async fn test_project_access_scopes_route_patch_empty_payload(pool: PgPool) {
 
 #[sqlx::test(fixtures("../fixtures/project_access_scopes.sql"))]
 async fn test_project_access_scopes_route_delete_succeeds(pool: PgPool) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
     let response = actix_web::test::TestRequest::delete()
         .uri("/project-access-scopes/00000000-0000-0000-0000-000000001001")
         .send_request(&app)
@@ -132,7 +131,7 @@ async fn test_project_access_scopes_route_delete_succeeds(pool: PgPool) {
 
 #[sqlx::test(fixtures("../fixtures/project_access_scopes.sql"))]
 async fn test_project_access_scopes_route_delete_not_found(pool: PgPool) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
     let response = actix_web::test::TestRequest::delete()
         .uri("/project-access-scopes/00000000-0000-0000-0000-00000000dead")
         .send_request(&app)
@@ -142,7 +141,7 @@ async fn test_project_access_scopes_route_delete_not_found(pool: PgPool) {
 
 #[sqlx::test(fixtures("../fixtures/project_access_scopes.sql"))]
 async fn test_project_access_scopes_route_list_all(pool: PgPool) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
     let response = actix_web::test::TestRequest::get()
         .uri("/project-access-scopes")
         .send_request(&app)
@@ -154,7 +153,7 @@ async fn test_project_access_scopes_route_list_all(pool: PgPool) {
 
 #[sqlx::test(fixtures("../fixtures/project_access_scopes.sql"))]
 async fn test_project_access_scopes_route_list_filter_by_project_access_id(pool: PgPool) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
     let response = actix_web::test::TestRequest::get()
         .uri("/project-access-scopes?project_access_id=00000000-0000-0000-0000-000000000101")
         .send_request(&app)

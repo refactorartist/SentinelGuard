@@ -4,8 +4,9 @@ use crate::models::project_access::{
     ProjectAccessSortableFields, ProjectAccessUpdatePayload,
 };
 use crate::models::sort::SortOrder;
-use crate::services::project_access_service::ProjectAccessService;
-use crate::{models::project_access::ProjectAccessCreatePayload, services::base::Service};
+use crate::repositories::project_access_repository::ProjectAccessRepository;
+use crate::repositories::base::Repository;
+use crate::models::project_access::ProjectAccessCreatePayload;
 use actix_web::{Error, HttpResponse, web};
 use uuid::Uuid;
 
@@ -20,10 +21,10 @@ use uuid::Uuid;
     ),
 )]
 pub async fn post(
-    service: web::Data<ProjectAccessService>,
+    repository: web::Data<ProjectAccessRepository>,
     payload: web::Json<ProjectAccessCreatePayload>,
 ) -> Result<HttpResponse, Error> {
-    let project_access = service
+    let project_access = repository
         .create(payload.into_inner())
         .await
         .map_err(actix_web::error::ErrorBadRequest)?;
@@ -40,10 +41,10 @@ pub async fn post(
     ),
 )]
 pub async fn get(
-    service: web::Data<ProjectAccessService>,
+    repository: web::Data<ProjectAccessRepository>,
     id: web::Path<Uuid>,
 ) -> Result<HttpResponse, Error> {
-    let project_access = service
+    let project_access = repository
         .read(id.into_inner())
         .await
         .map_err(actix_web::error::ErrorBadRequest)?;
@@ -61,11 +62,11 @@ pub async fn get(
     ),
 )]
 pub async fn patch(
-    service: web::Data<ProjectAccessService>,
+    repository: web::Data<ProjectAccessRepository>,
     id: web::Path<Uuid>,
     payload: web::Json<ProjectAccessUpdatePayload>,
 ) -> Result<HttpResponse, Error> {
-    let project_access = service
+    let project_access = repository
         .update(id.into_inner(), payload.into_inner())
         .await
         .map_err(actix_web::error::ErrorBadRequest)?;
@@ -82,10 +83,10 @@ pub async fn patch(
     ),
 )]
 pub async fn delete(
-    service: web::Data<ProjectAccessService>,
+    repository: web::Data<ProjectAccessRepository>,
     id: web::Path<Uuid>,
 ) -> Result<HttpResponse, Error> {
-    let project_access = service
+    let project_access = repository
         .delete(id.into_inner())
         .await
         .map_err(actix_web::error::ErrorBadRequest)?;
@@ -105,7 +106,7 @@ pub async fn delete(
     ),
 )]
 pub async fn list(
-    service: web::Data<ProjectAccessService>,
+    repository: web::Data<ProjectAccessRepository>,
     filter: web::Query<ProjectAccessFilter>,
     pagination: web::Query<Pagination>,
 ) -> Result<HttpResponse, Error> {
@@ -114,7 +115,7 @@ pub async fn list(
         order: SortOrder::Desc,
     }];
 
-    let project_access = service
+    let project_access = repository
         .find(
             filter.into_inner(),
             Some(sort),

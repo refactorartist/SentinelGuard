@@ -4,8 +4,8 @@ use crate::models::environment::{
 };
 use crate::models::pagination::Pagination;
 use crate::models::sort::SortOrder;
-use crate::services::base::Service;
-use crate::services::environment_service::EnvironmentService;
+use crate::repositories::environment_repository::EnvironmentRepository;
+use crate::repositories::base::Repository;
 use actix_web::{Error, HttpResponse, web};
 
 #[utoipa::path(
@@ -19,10 +19,10 @@ use actix_web::{Error, HttpResponse, web};
     ),
 )]
 pub async fn post(
-    service: web::Data<EnvironmentService>,
+    repository: web::Data<EnvironmentRepository>,
     payload: web::Json<EnvironmentCreatePayload>,
 ) -> Result<HttpResponse, Error> {
-    let environment = service
+    let environment = repository
         .create(payload.into_inner())
         .await
         .map_err(actix_web::error::ErrorBadRequest)?;
@@ -42,10 +42,10 @@ pub async fn post(
     ),
 )]
 pub async fn get(
-    service: web::Data<EnvironmentService>,
+    repository: web::Data<EnvironmentRepository>,
     id: web::Path<uuid::Uuid>,
 ) -> Result<HttpResponse, Error> {
-    let environment = service
+    let environment = repository
         .read(id.into_inner())
         .await
         .map_err(actix_web::error::ErrorNotFound)?;
@@ -69,12 +69,11 @@ pub async fn get(
     ),
 )]
 pub async fn patch(
-    service: web::Data<EnvironmentService>,
+    repository: web::Data<EnvironmentRepository>,
     id: web::Path<uuid::Uuid>,
     payload: web::Json<EnvironmentUpdatePayload>,
 ) -> Result<HttpResponse, Error> {
-    let environment = service.update(id.into_inner(), payload.into_inner()).await;
-
+    let environment = repository.update(id.into_inner(), payload.into_inner()).await;
     if environment.is_err() {
         let error_message = environment.unwrap_err().to_string();
         match error_message.as_str() {
@@ -88,7 +87,6 @@ pub async fn patch(
             _ => return Err(actix_web::error::ErrorInternalServerError(error_message)),
         }
     }
-
     Ok(HttpResponse::Ok().json(EnvironmentResponse::from(environment.unwrap())))
 }
 
@@ -105,11 +103,10 @@ pub async fn patch(
     )
 )]
 pub async fn delete(
-    service: web::Data<EnvironmentService>,
+    repository: web::Data<EnvironmentRepository>,
     id: web::Path<uuid::Uuid>,
 ) -> Result<HttpResponse, Error> {
-    let result = service.delete(id.into_inner()).await;
-
+    let result = repository.delete(id.into_inner()).await;
     if result.is_err() {
         let error_message = result.unwrap_err().to_string();
         match error_message.as_str() {
@@ -119,7 +116,6 @@ pub async fn delete(
             _ => return Err(actix_web::error::ErrorInternalServerError(error_message)),
         }
     }
-
     Ok(HttpResponse::NoContent().finish())
 }
 
@@ -140,7 +136,7 @@ pub async fn delete(
     )
 )]
 pub async fn list(
-    service: web::Data<EnvironmentService>,
+    repository: web::Data<EnvironmentRepository>,
     filter: web::Query<EnvironmentFilter>,
     pagination: web::Query<Pagination>,
 ) -> Result<HttpResponse, Error> {
@@ -148,7 +144,7 @@ pub async fn list(
         EnvironmentSortableFields::Id,
         SortOrder::Asc,
     )];
-    let environments = service
+    let environments = repository
         .find(
             filter.into_inner(),
             Some(sort),
@@ -156,12 +152,10 @@ pub async fn list(
         )
         .await
         .map_err(actix_web::error::ErrorInternalServerError)?;
-
     let responses: Vec<EnvironmentResponse> = environments
         .into_iter()
         .map(EnvironmentResponse::from)
         .collect();
-
     Ok(HttpResponse::Ok().json(responses))
 }
 

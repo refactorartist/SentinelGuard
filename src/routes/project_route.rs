@@ -3,11 +3,9 @@ use crate::models::project::{
     ProjectFilter, ProjectResponse, ProjectSortOrder, ProjectSortableFields,
 };
 use crate::models::sort::SortOrder;
-use crate::services::project_service::ProjectService;
-use crate::{
-    models::project::{ProjectCreatePayload, ProjectUpdatePayload},
-    services::base::Service,
-};
+use crate::repositories::project_repository::ProjectRepository;
+use crate::repositories::base::Repository;
+use crate::models::project::{ProjectCreatePayload, ProjectUpdatePayload};
 use actix_web::{Error, HttpResponse, web};
 
 #[utoipa::path(
@@ -21,10 +19,10 @@ use actix_web::{Error, HttpResponse, web};
     ),
 )]
 pub async fn post(
-    service: web::Data<ProjectService>,
+    repository: web::Data<ProjectRepository>,
     payload: web::Json<ProjectCreatePayload>,
 ) -> Result<HttpResponse, Error> {
-    let project = service
+    let project = repository
         .create(payload.into_inner())
         .await
         .map_err(actix_web::error::ErrorBadRequest)?;
@@ -44,10 +42,10 @@ pub async fn post(
     ),
 )]
 pub async fn get(
-    service: web::Data<ProjectService>,
+    repository: web::Data<ProjectRepository>,
     id: web::Path<uuid::Uuid>,
 ) -> Result<HttpResponse, Error> {
-    let project = service
+    let project = repository
         .read(id.into_inner())
         .await
         .map_err(actix_web::error::ErrorNotFound)?;
@@ -70,12 +68,11 @@ pub async fn get(
     ),
 )]
 pub async fn patch(
-    service: web::Data<ProjectService>,
+    repository: web::Data<ProjectRepository>,
     id: web::Path<uuid::Uuid>,
     payload: web::Json<ProjectUpdatePayload>,
 ) -> Result<HttpResponse, Error> {
-    let project = service.update(id.into_inner(), payload.into_inner()).await;
-
+    let project = repository.update(id.into_inner(), payload.into_inner()).await;
     if project.is_err() {
         let error_message = project.unwrap_err().to_string();
         match error_message.as_str() {
@@ -87,7 +84,6 @@ pub async fn patch(
             _ => return Err(actix_web::error::ErrorInternalServerError(error_message)),
         }
     }
-
     Ok(HttpResponse::Ok().json(project.unwrap()))
 }
 
@@ -104,11 +100,10 @@ pub async fn patch(
     )
 )]
 pub async fn delete(
-    service: web::Data<ProjectService>,
+    repository: web::Data<ProjectRepository>,
     id: web::Path<uuid::Uuid>,
 ) -> Result<HttpResponse, Error> {
-    let result = service.delete(id.into_inner()).await;
-
+    let result = repository.delete(id.into_inner()).await;
     match result {
         Ok(true) => Ok(HttpResponse::NoContent().finish()),
         Ok(false) => Err(actix_web::error::ErrorNotFound("Project not found")),
@@ -132,7 +127,7 @@ pub async fn delete(
     )
 )]
 pub async fn list(
-    service: web::Data<ProjectService>,
+    repository: web::Data<ProjectRepository>,
     filter: web::Query<ProjectFilter>,
     pagination: web::Query<Pagination>,
 ) -> Result<HttpResponse, Error> {
@@ -140,7 +135,7 @@ pub async fn list(
         ProjectSortableFields::Id,
         SortOrder::Asc,
     )];
-    let projects = service
+    let projects = repository
         .find(
             filter.into_inner(),
             Some(sort),

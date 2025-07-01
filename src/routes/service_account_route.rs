@@ -4,8 +4,8 @@ use crate::models::service_account::{
     ServiceAccountSortOrder, ServiceAccountSortableFields, ServiceAccountUpdatePayload,
 };
 use crate::models::sort::SortOrder;
-use crate::services::base::Service;
-use crate::services::service_account_service::ServiceAccountService;
+use crate::repositories::service_account_repository::ServiceAccountRepository;
+use crate::repositories::base::Repository;
 use actix_web::{Error, HttpResponse, web};
 
 #[utoipa::path(
@@ -19,10 +19,10 @@ use actix_web::{Error, HttpResponse, web};
     ),
 )]
 pub async fn post(
-    service: web::Data<ServiceAccountService>,
+    repository: web::Data<ServiceAccountRepository>,
     payload: web::Json<ServiceAccountCreatePayload>,
 ) -> Result<HttpResponse, Error> {
-    let service_account = service
+    let service_account = repository
         .create(payload.into_inner())
         .await
         .map_err(actix_web::error::ErrorBadRequest)?;
@@ -42,10 +42,10 @@ pub async fn post(
     ),
 )]
 pub async fn get(
-    service: web::Data<ServiceAccountService>,
+    repository: web::Data<ServiceAccountRepository>,
     id: web::Path<uuid::Uuid>,
 ) -> Result<HttpResponse, Error> {
-    let service_account = service
+    let service_account = repository
         .read(id.into_inner())
         .await
         .map_err(actix_web::error::ErrorNotFound)?;
@@ -69,12 +69,11 @@ pub async fn get(
     ),
 )]
 pub async fn patch(
-    service: web::Data<ServiceAccountService>,
+    repository: web::Data<ServiceAccountRepository>,
     id: web::Path<uuid::Uuid>,
     payload: web::Json<ServiceAccountUpdatePayload>,
 ) -> Result<HttpResponse, Error> {
-    let service_account = service.update(id.into_inner(), payload.into_inner()).await;
-
+    let service_account = repository.update(id.into_inner(), payload.into_inner()).await;
     if service_account.is_err() {
         let error_message = service_account.unwrap_err().to_string();
         match error_message.as_str() {
@@ -88,10 +87,11 @@ pub async fn patch(
             "Service account email already exists" => {
                 return Err(actix_web::error::ErrorConflict(error_message));
             }
-            _ => return Err(actix_web::error::ErrorInternalServerError(error_message)),
+            _ => {
+                return Err(actix_web::error::ErrorInternalServerError(error_message));
+            },
         }
     }
-
     Ok(HttpResponse::Ok().json(service_account.unwrap()))
 }
 
@@ -108,11 +108,10 @@ pub async fn patch(
     )
 )]
 pub async fn delete(
-    service: web::Data<ServiceAccountService>,
+    repository: web::Data<ServiceAccountRepository>,
     id: web::Path<uuid::Uuid>,
 ) -> Result<HttpResponse, Error> {
-    let result = service.delete(id.into_inner()).await;
-
+    let result = repository.delete(id.into_inner()).await;
     match result {
         Ok(true) => Ok(HttpResponse::NoContent().finish()),
         Ok(false) => Err(actix_web::error::ErrorNotFound("Service account not found")),
@@ -136,7 +135,7 @@ pub async fn delete(
     )
 )]
 pub async fn list(
-    service: web::Data<ServiceAccountService>,
+    repository: web::Data<ServiceAccountRepository>,
     filter: web::Query<ServiceAccountFilter>,
     pagination: web::Query<Pagination>,
 ) -> Result<HttpResponse, Error> {
@@ -144,7 +143,7 @@ pub async fn list(
         ServiceAccountSortableFields::Id,
         SortOrder::Asc,
     )];
-    let service_accounts = service
+    let service_accounts = repository
         .find(
             filter.into_inner(),
             Some(sort),

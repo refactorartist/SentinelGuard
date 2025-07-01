@@ -8,11 +8,10 @@ use sentinel_guard::{
     },
     repositories::environment_key_repository::EnvironmentKeyRepository,
     routes::environment_key_route,
-    services::environment_key_service::EnvironmentKeyService,
 };
 
-fn services(pool: PgPool) -> EnvironmentKeyService {
-    EnvironmentKeyService::new(EnvironmentKeyRepository::new(Arc::new(pool)))
+fn repositories(pool: PgPool) -> EnvironmentKeyRepository {
+    EnvironmentKeyRepository::new(Arc::new(pool))
 }
 
 fn routes() -> fn(&mut actix_web::web::ServiceConfig) {
@@ -23,7 +22,7 @@ use crate::create_test_app;
 
 #[sqlx::test(fixtures("../fixtures/environment_keys.sql"))]
 async fn test_environment_key_route_create_valid(pool: PgPool) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
     let payload = EnvironmentKeyCreatePayload {
         environment_id: "123e4567-e89b-12d3-a456-426614174000".to_string(),
         algorithm: "RS512".to_string(),
@@ -44,7 +43,7 @@ async fn test_environment_key_route_create_valid(pool: PgPool) {
 
 #[sqlx::test(fixtures("../fixtures/environment_keys.sql"))]
 async fn test_environment_key_route_create_duplicate_fails(pool: PgPool) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
     let payload = EnvironmentKeyCreatePayload {
         environment_id: "123e4567-e89b-12d3-a456-426614174000".to_string(),
         algorithm: "HS256".to_string(),
@@ -60,7 +59,7 @@ async fn test_environment_key_route_create_duplicate_fails(pool: PgPool) {
 
 #[sqlx::test(fixtures("../fixtures/environment_keys.sql"))]
 async fn test_environment_key_route_get_by_id_succeeds(pool: PgPool) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
     let response = actix_web::test::TestRequest::get()
         .uri("/environment-keys/00000000-0000-0000-0000-000000000001")
         .send_request(&app)
@@ -72,7 +71,7 @@ async fn test_environment_key_route_get_by_id_succeeds(pool: PgPool) {
 
 #[sqlx::test(fixtures("../fixtures/environment_keys.sql"))]
 async fn test_environment_key_route_get_by_id_not_found(pool: PgPool) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
     let response = actix_web::test::TestRequest::get()
         .uri("/environment-keys/00000000-0000-0000-0000-00000000dead")
         .send_request(&app)
@@ -82,7 +81,7 @@ async fn test_environment_key_route_get_by_id_not_found(pool: PgPool) {
 
 #[sqlx::test(fixtures("../fixtures/environment_keys.sql"))]
 async fn test_environment_key_route_patch_active_succeeds(pool: PgPool) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
     let payload = EnvironmentKeyUpdatePayload {
         active: Some(false),
     };
@@ -98,7 +97,7 @@ async fn test_environment_key_route_patch_active_succeeds(pool: PgPool) {
 
 #[sqlx::test(fixtures("../fixtures/environment_keys.sql"))]
 async fn test_environment_key_route_patch_not_found(pool: PgPool) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
     let payload = EnvironmentKeyUpdatePayload {
         active: Some(false),
     };
@@ -112,7 +111,7 @@ async fn test_environment_key_route_patch_not_found(pool: PgPool) {
 
 #[sqlx::test(fixtures("../fixtures/environment_keys.sql"))]
 async fn test_environment_key_route_patch_empty_payload(pool: PgPool) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
     let payload = EnvironmentKeyUpdatePayload { active: None };
     let response = actix_web::test::TestRequest::patch()
         .uri("/environment-keys/00000000-0000-0000-0000-000000000001")
@@ -124,7 +123,7 @@ async fn test_environment_key_route_patch_empty_payload(pool: PgPool) {
 
 #[sqlx::test(fixtures("../fixtures/environment_keys.sql"))]
 async fn test_environment_key_route_delete_succeeds(pool: PgPool) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
     let response = actix_web::test::TestRequest::delete()
         .uri("/environment-keys/00000000-0000-0000-0000-000000000001")
         .send_request(&app)
@@ -134,7 +133,7 @@ async fn test_environment_key_route_delete_succeeds(pool: PgPool) {
 
 #[sqlx::test(fixtures("../fixtures/environment_keys.sql"))]
 async fn test_environment_key_route_delete_not_found(pool: PgPool) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
     let response = actix_web::test::TestRequest::delete()
         .uri("/environment-keys/00000000-0000-0000-0000-00000000dead")
         .send_request(&app)
@@ -144,7 +143,7 @@ async fn test_environment_key_route_delete_not_found(pool: PgPool) {
 
 #[sqlx::test(fixtures("../fixtures/environment_keys.sql"))]
 async fn test_environment_key_route_list_all(pool: PgPool) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
     let response = actix_web::test::TestRequest::get()
         .uri("/environment-keys")
         .send_request(&app)
@@ -156,7 +155,7 @@ async fn test_environment_key_route_list_all(pool: PgPool) {
 
 #[sqlx::test(fixtures("../fixtures/environment_keys.sql"))]
 async fn test_environment_key_route_list_filter_by_active(pool: PgPool) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
     let response = actix_web::test::TestRequest::get()
         .uri("/environment-keys?active=false")
         .send_request(&app)
@@ -170,7 +169,7 @@ async fn test_environment_key_route_list_filter_by_active(pool: PgPool) {
 
 #[sqlx::test(fixtures("../fixtures/environment_keys.sql"))]
 async fn test_environment_key_route_rotate_key_succeeds(pool: PgPool) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
     let key_id = "00000000-0000-0000-0000-000000000001";
     let response = actix_web::test::TestRequest::post()
         .uri(&format!("/environment-keys/{}/rotate", key_id))
@@ -185,7 +184,7 @@ async fn test_environment_key_route_rotate_key_succeeds(pool: PgPool) {
 
 #[sqlx::test(fixtures("../fixtures/environment_keys.sql"))]
 async fn test_environment_key_route_rotate_key_not_found(pool: PgPool) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
     let key_id = "00000000-0000-0000-0000-00000000dead";
     let response = actix_web::test::TestRequest::post()
         .uri(&format!("/environment-keys/{}/rotate", key_id))

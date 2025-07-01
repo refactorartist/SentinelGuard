@@ -6,14 +6,13 @@ use sentinel_guard::{
     },
     repositories::environment_repository::EnvironmentRepository,
     routes::environment_route,
-    services::environment_service::EnvironmentService,
 };
 use sqlx::PgPool;
 
 use crate::create_test_app;
 
-fn services(pool: PgPool) -> EnvironmentService {
-    EnvironmentService::new(EnvironmentRepository::new(Arc::new(pool)))
+fn repositories(pool: PgPool) -> EnvironmentRepository {
+    EnvironmentRepository::new(Arc::new(pool))
 }
 
 fn routes() -> fn(&mut actix_web::web::ServiceConfig) {
@@ -22,7 +21,7 @@ fn routes() -> fn(&mut actix_web::web::ServiceConfig) {
 
 #[sqlx::test(fixtures("../fixtures/projects.sql"))]
 async fn test_environment_route_create_environment_with_valid_data_succeeds(pool: PgPool) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
 
     let environment = EnvironmentCreatePayload {
         name: "test-env".to_string(),
@@ -44,7 +43,7 @@ async fn test_environment_route_create_environment_with_valid_data_succeeds(pool
 async fn test_environment_route_create_environment_with_duplicate_project_id_name_fails(
     pool: PgPool,
 ) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
 
     let environment = EnvironmentCreatePayload {
         name: "dev".to_string(),
@@ -65,7 +64,7 @@ async fn test_environment_route_create_environment_with_duplicate_project_id_nam
 
 #[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/environments.sql"))]
 async fn test_environment_route_read_environment_by_id_successful(pool: PgPool) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
 
     let response = actix_web::test::TestRequest::get()
         .uri("/environments/00000000-0000-0000-0000-000000000001")
@@ -77,7 +76,7 @@ async fn test_environment_route_read_environment_by_id_successful(pool: PgPool) 
 
 #[sqlx::test]
 async fn test_environment_route_read_environment_by_id_not_found(pool: PgPool) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
 
     let response = actix_web::test::TestRequest::get()
         .uri("/environments/00000000-0000-0000-0000-000000000099")
@@ -90,7 +89,7 @@ async fn test_environment_route_read_environment_by_id_not_found(pool: PgPool) {
 
 #[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/environments.sql"))]
 async fn test_environment_route_patch_name_successful(pool: PgPool) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
 
     let payload = EnvironmentUpdatePayload {
         name: Some("updated-name".to_string()),
@@ -109,7 +108,7 @@ async fn test_environment_route_patch_name_successful(pool: PgPool) {
 
 #[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/environments.sql"))]
 async fn test_environment_route_patch_description_successful(pool: PgPool) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
 
     let payload = EnvironmentUpdatePayload {
         name: None,
@@ -128,7 +127,7 @@ async fn test_environment_route_patch_description_successful(pool: PgPool) {
 
 #[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/environments.sql"))]
 async fn test_environment_route_patch_enabled_true_successful(pool: PgPool) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
 
     let payload = EnvironmentUpdatePayload {
         name: None,
@@ -147,7 +146,7 @@ async fn test_environment_route_patch_enabled_true_successful(pool: PgPool) {
 
 #[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/environments.sql"))]
 async fn test_environment_route_patch_enabled_false_successful(pool: PgPool) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
 
     let payload = EnvironmentUpdatePayload {
         name: None,
@@ -166,7 +165,7 @@ async fn test_environment_route_patch_enabled_false_successful(pool: PgPool) {
 
 #[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/environments.sql"))]
 async fn test_environment_route_patch_duplicate_project_id_name_fails(pool: PgPool) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
 
     let payload = EnvironmentUpdatePayload {
         name: Some("staging".to_string()),
@@ -186,7 +185,7 @@ async fn test_environment_route_patch_duplicate_project_id_name_fails(pool: PgPo
 
 #[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/environments.sql"))]
 async fn test_environment_route_delete_environment_successful(pool: PgPool) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
 
     let response = actix_web::test::TestRequest::delete()
         .uri("/environments/00000000-0000-0000-0000-000000000001")
@@ -198,7 +197,7 @@ async fn test_environment_route_delete_environment_successful(pool: PgPool) {
 
 #[sqlx::test]
 async fn test_environment_route_delete_environment_not_found(pool: PgPool) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
 
     let response = actix_web::test::TestRequest::delete()
         .uri("/environments/00000000-0000-0000-0000-000000000099")
@@ -211,7 +210,7 @@ async fn test_environment_route_delete_environment_not_found(pool: PgPool) {
 
 #[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/environments.sql"))]
 async fn test_environment_route_list_environments_filter_by_project_id(pool: PgPool) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
 
     let response = actix_web::test::TestRequest::get()
         .uri("/environments?project_id=123e4567-e89b-12d3-a456-426614174000")
@@ -229,7 +228,7 @@ async fn test_environment_route_list_environments_filter_by_project_id(pool: PgP
 
 #[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/environments.sql"))]
 async fn test_environment_route_list_environments_filter_by_enabled_true(pool: PgPool) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
 
     let response = actix_web::test::TestRequest::get()
         .uri("/environments?enabled=true")
@@ -243,7 +242,7 @@ async fn test_environment_route_list_environments_filter_by_enabled_true(pool: P
 
 #[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/environments.sql"))]
 async fn test_environment_route_list_environments_filter_by_enabled_false(pool: PgPool) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
 
     let response = actix_web::test::TestRequest::get()
         .uri("/environments?enabled=false")
@@ -257,7 +256,7 @@ async fn test_environment_route_list_environments_filter_by_enabled_false(pool: 
 
 #[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/environments.sql"))]
 async fn test_environment_route_list_environments_filter_by_name(pool: PgPool) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
 
     let response = actix_web::test::TestRequest::get()
         .uri("/environments?name=dev")
@@ -271,7 +270,7 @@ async fn test_environment_route_list_environments_filter_by_name(pool: PgPool) {
 
 #[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/environments.sql"))]
 async fn test_environment_route_list_environments_filter_by_description(pool: PgPool) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
 
     let response = actix_web::test::TestRequest::get()
         .uri("/environments?description=Development")
@@ -289,7 +288,7 @@ async fn test_environment_route_list_environments_filter_by_description(pool: Pg
 
 #[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/environments.sql"))]
 async fn test_environment_route_list_environments_limit_success(pool: PgPool) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
 
     let response = actix_web::test::TestRequest::get()
         .uri("/environments?limit=1")
@@ -303,7 +302,7 @@ async fn test_environment_route_list_environments_limit_success(pool: PgPool) {
 
 #[sqlx::test(fixtures("../fixtures/projects.sql", "../fixtures/environments.sql"))]
 async fn test_environment_route_list_environments_offset_success(pool: PgPool) {
-    let app = create_test_app!(services(pool), routes());
+    let app = create_test_app!(repositories(pool), routes());
 
     // First request - get first item
     let first_response = actix_web::test::TestRequest::get()
