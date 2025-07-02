@@ -61,6 +61,25 @@ pub struct AccessTokenCreatePayload {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, ToSchema)]
+pub struct AccessTokenCreatePayloadWithAccessToken {
+    pub project_access_id: String,
+    pub algorithm: String,
+    pub expires_at: String,
+    pub access_token: String,
+}
+
+impl From<AccessTokenCreatePayloadWithAccessToken> for AccessTokenCreatePayload {
+    fn from(value: AccessTokenCreatePayloadWithAccessToken) -> Self {
+        Self {
+            project_access_id: value.project_access_id,
+            algorithm: value.algorithm,
+            expires_at: value.expires_at,
+        }
+    }
+}
+
+
+#[derive(Debug, Serialize, Deserialize, Clone, ToSchema)]
 pub struct AccessTokenUpdatePayload {
     pub active: Option<bool>,
 }
