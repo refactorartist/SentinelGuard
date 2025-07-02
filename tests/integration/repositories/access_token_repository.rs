@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use sentinel_guard::{
     models::{
-        access_token::{AccessTokenCreatePayload, AccessTokenFilter, AccessTokenUpdatePayload},
+        access_token::{AccessTokenCreatePayloadWithAccessToken, AccessTokenFilter, AccessTokenUpdatePayload},
         pagination::Pagination,
     },
     repositories::{access_token_repository::AccessTokenRepository, base::Repository},
@@ -13,10 +13,11 @@ use uuid::Uuid;
 #[sqlx::test(fixtures("../fixtures/access_tokens.sql"))]
 async fn test_access_token_repository_create_with_valid_data_succeeds(pool: PgPool) {
     let repository = AccessTokenRepository::new(Arc::new(pool));
-    let payload = AccessTokenCreatePayload {
+    let payload = AccessTokenCreatePayloadWithAccessToken {
         project_access_id: "00000000-0000-0000-0000-000000000101".to_string(),
         algorithm: "HS512".to_string(),
         expires_at: "2031-01-01T00:00:00Z".to_string(),
+        access_token: "test-token".to_string(),
     };
     let access_token = repository.create(payload.clone()).await.unwrap();
     assert_eq!(
@@ -30,10 +31,11 @@ async fn test_access_token_repository_create_with_valid_data_succeeds(pool: PgPo
 #[sqlx::test]
 async fn test_access_token_repository_create_with_missing_project_access_id_fails(pool: PgPool) {
     let repository = AccessTokenRepository::new(Arc::new(pool));
-    let payload = AccessTokenCreatePayload {
+    let payload = AccessTokenCreatePayloadWithAccessToken {
         project_access_id: Uuid::new_v4().to_string(),
         algorithm: "HS256".to_string(),
         expires_at: "2031-01-01T00:00:00Z".to_string(),
+        access_token: "test-token".to_string(),
     };
     let result = repository.create(payload).await;
     assert!(result.is_err());
